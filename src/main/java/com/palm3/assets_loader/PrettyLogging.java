@@ -8,7 +8,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 public class PrettyLogging {
 
-    private final Logger LOGGER;
+    public final Logger LOGGER;
 
     public static final String DEF_LINE = "===================================================================================";  // 83 chars
     public static final String DEF_EMPTY_LINE = "                                                                                   ";  // 83 chars
