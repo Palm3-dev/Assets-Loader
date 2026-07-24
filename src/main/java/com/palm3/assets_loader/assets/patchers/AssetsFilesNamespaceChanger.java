@@ -138,7 +138,7 @@ public class AssetsFilesNamespaceChanger {
     }
 
     // Replaces all the old namespace occurrences in the given file with the new namespace. targetDir used only for logs.
-    private static void processFile(Path targetDirectory, Path file, String oldNamespace, String newNamespace) {
+    protected static void processFile(Path targetDirectory, Path file, String oldNamespace, String newNamespace) {
         PL.logI("Found file '" + targetDirectory.relativize(file) + "'.");
         try {
             String fileAsString = Files.readString(file);
@@ -186,7 +186,7 @@ public class AssetsFilesNamespaceChanger {
                     .resolve("models");
 
             // Block models patch
-            if (assetType == AssetType.BLOCK_MODELS || assetType == AssetType.ALL_MODELS) {
+            if (assetType.isBlockModel()) {
                 changeFilesNamespace(
                         modelsDir.resolve("block"),
                         namespaceCouple.oldNamespace,
@@ -194,7 +194,7 @@ public class AssetsFilesNamespaceChanger {
                         null);
             }
             // Item models patch
-            if (assetType == AssetType.ITEM_MODELS || assetType == AssetType.ALL_MODELS) {
+            if (assetType.isItemModel()) {
                 changeFilesNamespace(
                         modelsDir.resolve("item"),
                         namespaceCouple.oldNamespace,
@@ -202,7 +202,7 @@ public class AssetsFilesNamespaceChanger {
                         null);
             }
             // Skipped, invalid
-            if (assetType != AssetType.ALL_MODELS && assetType != AssetType.BLOCK_MODELS && assetType != AssetType.ITEM_MODELS) {
+            if (!assetType.isModel()) {
                 PL.logW("Tried to change models, but specified change is " + assetType + ", skipping.");
             }
         });
