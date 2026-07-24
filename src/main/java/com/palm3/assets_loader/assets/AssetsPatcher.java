@@ -22,7 +22,7 @@ public class AssetsPatcher {
     public static final PrettyLogging PL = new PrettyLogging(LogUtils.getLogger(), LoaderMain.DEF_PL_PARAMS);
     public static final Path GAME_DIR = FMLPaths.GAMEDIR.get();
 
-    @ParametersAreNonnullByDefault
+    /*@ParametersAreNonnullByDefault
     public static class NamespaceChanger {
 
         private final @NotNull Path assetsDirectory;
@@ -58,7 +58,7 @@ public class AssetsPatcher {
          * @param newNamespaces A list of the new namespaces. Remember to match the namespaces in the previous list.
          * @return The {@link List} of {@link NamespaceCouple}.
          * @throws IllegalArgumentException If the lists are different in dimension.
-         */
+         * /
         public static List<NamespaceCouple> createNamespacesList(List<String> oldNamespaces, List<String> newNamespaces) throws IllegalArgumentException {
             // Check lists or throw
             if (oldNamespaces.size() != newNamespaces.size()) {
@@ -88,7 +88,7 @@ public class AssetsPatcher {
          * @param namespacesCouples A {@link List} of {@link NamespaceCouple} with the old and new namespaces. To easily create one you can use
          * {@link NamespaceChanger#createNamespacesList(List, List)}
          * @return A new instance of {@link NamespaceChanger}.
-         */
+         * /
         public static NamespaceChanger multipleNamespaces(Path packDirectory, List<NamespaceCouple> namespacesCouples) {
             return new NamespaceChanger(packDirectory, namespacesCouples);
         }
@@ -104,7 +104,7 @@ public class AssetsPatcher {
          * @param packDirectory The directory containing the pack you want to modify the namespace  (the one with assets folder, the icon, etc.).
          * @param oldNamespace The old namespace to change.
          * @param newNamespace The new namespace that will replace the old one.
-         */
+         * /
         public static NamespaceChanger singleNamespace(Path packDirectory, String oldNamespace, String newNamespace) {
             List<NamespaceCouple> namespacesCouples = new ArrayList<>();
             namespacesCouples.add(new NamespaceCouple(oldNamespace, newNamespace));
@@ -151,7 +151,7 @@ public class AssetsPatcher {
         /**
          * Changes the namespace(s) of the specified model types.
          * @param changeType The type of models to change the namespace.
-         */
+         * /
         public void changeModels(ChangeType changeType) {
             repeatForCouples(namespaceCouple -> {
                 Path modelsDir = assetsDirectory
@@ -184,7 +184,7 @@ public class AssetsPatcher {
 
         /**
          * Changes the namespace(s) of the blockstates.
-         */
+         * /
         public void changeBlockStates() {
             repeatForCouples(namespaceCouple -> changeFilesNamespace(
                     // The new namespace is used in the directory (changed when copied), only the files have the old one.
@@ -196,7 +196,7 @@ public class AssetsPatcher {
 
         /**
          * Changes the namespace(s) of the lang files.
-         */
+         * /
         public void changeLang() {
             repeatForCouples(namespaceCouple -> changeFilesNamespace(
                     // The new namespace is used in the directory (changed when copied), only the files have the old one.                    
@@ -208,7 +208,7 @@ public class AssetsPatcher {
 
         /**
          * Changes the {@code sounds.json} file namespace(s).
-         */
+         * /
         public void changeSounds() {
             repeatForCouples(namespaceCouple -> changeFilesNamespace(
                     assetsDirectory.resolve(namespaceCouple.newNamespace),
@@ -221,7 +221,7 @@ public class AssetsPatcher {
         /**
          * Loads custom type of assets.
          * @param changeTypes The types of assets, use commas to separate {@link ChangeType}.
-         */
+         * /
         public void customChanges(ChangeType... changeTypes) {
             for (ChangeType type : changeTypes) {
                 if (type == ChangeType.ALL_MODELS || type == ChangeType.BLOCK_MODELS || type == ChangeType.ITEM_MODELS)
@@ -237,7 +237,7 @@ public class AssetsPatcher {
 
         /**
          * Changes the namespace of all files (blockstates, models, sounds.json, lang).
-         */
+         * /
         public void changeAll() {
             changeLang();
             changeBlockStates();
@@ -255,7 +255,7 @@ public class AssetsPatcher {
              * @param oldNamespace The old namespace occurring in the resourcepack files.
              * @param newNamespace The new namespace that will replace the old one; also the name of the directory
              *                     inside the {@code assets} folder containing all the files (blockstates, models...).
-             */
+             * /
             public NamespaceCouple(String oldNamespace, String newNamespace) {
                 this.oldNamespace = oldNamespace;
                 this.newNamespace = newNamespace;
@@ -269,7 +269,7 @@ public class AssetsPatcher {
                 return newNamespace;
             }
         }
-    }
+    }*/
 
 
     //todo fix counter and code rework (rendere guardabile)
