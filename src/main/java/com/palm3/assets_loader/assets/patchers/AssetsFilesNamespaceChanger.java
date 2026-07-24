@@ -47,24 +47,13 @@ import java.util.stream.Stream;
  *     </p>
  */
 @ParametersAreNonnullByDefault
-public class FilesNamespaceChanger {
+public class AssetsFilesNamespaceChanger {
 
     private static final PrettyLogging PL = new PrettyLogging(LogUtils.getLogger(), LoaderMain.DEF_PL_PARAMS);
     private final @NotNull Path assetsDirectory;
     private final @NotNull List<NamespaceCouple> namespacesCouples;
 
-    public enum ChangeType {
-        ITEM_MODELS,
-        BLOCK_MODELS,
-        ALL_MODELS,
-        BLOCK_STATE,
-        LANG,
-        SOUNDS;
-
-        ChangeType() {}
-    }
-
-    private FilesNamespaceChanger(Path packDirectory, List<NamespaceCouple> namespacesCouples) {
+    private AssetsFilesNamespaceChanger(Path packDirectory, List<NamespaceCouple> namespacesCouples) {
         this.assetsDirectory = packDirectory.resolve("assets");
         this.namespacesCouples = namespacesCouples;
     }
@@ -122,11 +111,11 @@ public class FilesNamespaceChanger {
      * </p>
      * @param packDirectory The directory containing the pack you want to modify the namespaces (the one with assets folder, the icon, etc.).
      * @param namespacesCouples A {@link List} of {@link NamespaceCouple} with the old and new namespaces couplers.
-     *                          To easily create one you can use {@link FilesNamespaceChanger#createNamespacesList(List, List)}
-     * @return A new instance of {@link FilesNamespaceChanger}.
+     *                          To easily create one you can use {@link AssetsFilesNamespaceChanger#createNamespacesList(List, List)}
+     * @return A new instance of {@link AssetsFilesNamespaceChanger}.
      */
-    public static FilesNamespaceChanger multipleNamespaces(Path packDirectory, List<NamespaceCouple> namespacesCouples) {
-        return new FilesNamespaceChanger(packDirectory, namespacesCouples);
+    public static AssetsFilesNamespaceChanger multipleNamespaces(Path packDirectory, List<NamespaceCouple> namespacesCouples) {
+        return new AssetsFilesNamespaceChanger(packDirectory, namespacesCouples);
     }
 
     /**
@@ -142,10 +131,10 @@ public class FilesNamespaceChanger {
      * @param oldNamespace The old namespace to change.
      * @param newNamespace The new namespace that will replace the old one.
      */
-    public static FilesNamespaceChanger singleNamespace(Path packDirectory, String oldNamespace, String newNamespace) {
+    public static AssetsFilesNamespaceChanger singleNamespace(Path packDirectory, String oldNamespace, String newNamespace) {
         List<NamespaceCouple> namespacesCouples = new ArrayList<>();
         namespacesCouples.add(new NamespaceCouple(oldNamespace, newNamespace));
-        return new FilesNamespaceChanger(packDirectory, namespacesCouples);
+        return new AssetsFilesNamespaceChanger(packDirectory, namespacesCouples);
     }
 
     // Replaces all the old namespace occurrences in the given file with the new namespace. targetDir used only for logs.
@@ -181,15 +170,15 @@ public class FilesNamespaceChanger {
     }
 
     // Repeats given consumer for every existing couple of namespaces.
-    private void repeatForCouples(Consumer<FilesNamespaceChanger.NamespaceCouple> consumer) {
+    private void repeatForCouples(Consumer<AssetsFilesNamespaceChanger.NamespaceCouple> consumer) {
         for (NamespaceCouple namespaceCouple : namespacesCouples) consumer.accept(namespaceCouple);
     }
 
     /**
      * Changes the namespace(s) of the specified model types.
-     * @param changeType The type of models to change the namespace.
+     * @param assetType The type of models to change the namespace.
      */
-    public void changeModels(ChangeType changeType) {
+    public void changeModels(AssetType assetType) {
         repeatForCouples(namespaceCouple -> {
             Path modelsDir = assetsDirectory
                     // The new namespace is used in the directory (changed when copied), only the files have the old one.
@@ -197,7 +186,7 @@ public class FilesNamespaceChanger {
                     .resolve("models");
 
             // Block models patch
-            if (changeType == ChangeType.BLOCK_MODELS || changeType == ChangeType.ALL_MODELS) {
+            if (assetType == AssetType.BLOCK_MODELS || assetType == AssetType.ALL_MODELS) {
                 changeFilesNamespace(
                         modelsDir.resolve("block"),
                         namespaceCouple.oldNamespace,
@@ -205,7 +194,7 @@ public class FilesNamespaceChanger {
                         null);
             }
             // Item models patch
-            if (changeType == ChangeType.ITEM_MODELS || changeType == ChangeType.ALL_MODELS) {
+            if (assetType == AssetType.ITEM_MODELS || assetType == AssetType.ALL_MODELS) {
                 changeFilesNamespace(
                         modelsDir.resolve("item"),
                         namespaceCouple.oldNamespace,
@@ -213,8 +202,8 @@ public class FilesNamespaceChanger {
                         null);
             }
             // Skipped, invalid
-            if (changeType != ChangeType.ALL_MODELS && changeType != ChangeType.BLOCK_MODELS && changeType != ChangeType.ITEM_MODELS) {
-                PL.logW("Tried to change models, but specified change is " + changeType + ", skipping.");
+            if (assetType != AssetType.ALL_MODELS && assetType != AssetType.BLOCK_MODELS && assetType != AssetType.ITEM_MODELS) {
+                PL.logW("Tried to change models, but specified change is " + assetType + ", skipping.");
             }
         });
     }
@@ -257,17 +246,17 @@ public class FilesNamespaceChanger {
 
     /**
      * Loads custom type of assets.
-     * @param changeTypes The types of assets, use commas to separate {@link ChangeType}.
+     * @param assetTypes The types of assets, use commas to separate {@link AssetType}.
      */
-    public void customChanges(ChangeType... changeTypes) {
-        for (ChangeType type : changeTypes) {
-            if (type == ChangeType.ALL_MODELS || type == ChangeType.BLOCK_MODELS || type == ChangeType.ITEM_MODELS)
+    public void customChanges(AssetType... assetTypes) {
+        for (AssetType type : assetTypes) {
+            if (type == AssetType.ALL_MODELS || type == AssetType.BLOCK_MODELS || type == AssetType.ITEM_MODELS)
                 changeModels(type);
-            if (type == ChangeType.SOUNDS)
+            if (type == AssetType.SOUNDS)
                 changeSounds();
-            if (type == ChangeType.BLOCK_STATE)
+            if (type == AssetType.BLOCK_STATE)
                 changeBlockStates();
-            if (type == ChangeType.LANG)
+            if (type == AssetType.LANG)
                 changeLang();
         }
     }
@@ -279,7 +268,7 @@ public class FilesNamespaceChanger {
         changeLang();
         changeBlockStates();
         changeSounds();
-        changeModels(ChangeType.ALL_MODELS);
+        changeModels(AssetType.ALL_MODELS);
     }
 
 

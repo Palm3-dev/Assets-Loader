@@ -1,8 +1,8 @@
 package com.palm3.assets_loader.assets;
 
 import com.mojang.logging.LogUtils;
-import com.palm3.assets_loader.LoaderMain;
 import com.palm3.assets_loader.PrettyLogging;
+import com.palm3.assets_loader.assets.patchers.AssetsFilesNamespaceChanger;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.packs.*;
 import net.minecraft.server.packs.repository.*;
@@ -22,7 +22,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.palm3.assets_loader.LoaderMain.*;
 import static com.palm3.assets_loader.PrettyLogging.*;
-import static com.palm3.assets_loader.assets.AssetsPatcher.*;
 
 //todo add custom icon
 
@@ -131,7 +130,7 @@ public class AssetsLoader {
 
             copyAssetsFromJar(jarFilePath, target, jarAssetsNamespace, iconFileName, null, false, logCopy);
 
-           NamespaceChanger.singleNamespace(packPath, jarAssetsNamespace, newNamespace).changeAll();
+            AssetsFilesNamespaceChanger.singleNamespace(packPath, jarAssetsNamespace, newNamespace).changeAll();
 
             event.addRepositorySource(packRepositorySource(
                     resourcePackFolderName,
@@ -215,7 +214,7 @@ public class AssetsLoader {
 
             copyAssetsFromJar(jarFilePath, target, jarAssetsNamespace, iconFileName, null, false, logCopy);
 
-            NamespaceChanger.singleNamespace(packPath, jarAssetsNamespace, newNamespace).changeAll();
+            AssetsFilesNamespaceChanger.singleNamespace(packPath, jarAssetsNamespace, newNamespace).changeAll();
 
             event.addRepositorySource(packRepositorySource(
                     jarAssetsNamespace + "_mod_extracted_assets",
