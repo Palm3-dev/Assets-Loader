@@ -9,9 +9,11 @@ import org.jetbrains.annotations.NotNull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -156,12 +158,16 @@ public class AssetsFilesNamespaceChanger {
 
     // Changes the namespace of all the files in the given dir.
     @SuppressWarnings("all")
-    protected static void changeFilesNamespace(Path targetDirectory, String oldNamespace, String newNamespace, @Nullable String fileExtension) {
+    protected static void changeFilesNamespace(Path targetDirectory, String oldNamespace, String newNamespace, @Nullable String... fileExtensions) {
         try (Stream<Path> stream = Files.walk(targetDirectory)) {
             stream.filter(Files::isRegularFile)
                     .filter(path -> {
-                        if (fileExtension == null) return true;
-                        return path.toString().endsWith(fileExtension);
+                        if (fileExtensions == null) return true;  // Any extension
+                        for (String fileExtension : fileExtensions) {
+                            if (path.toString().endsWith(fileExtension)) return true;  // Extension of current file is in filters array
+                            return false;  // Doesn't match
+                        }
+                        return false;  // Doesn't match, maybe explodes? idk
                     })
                     .forEach(path -> processFile(targetDirectory, path, oldNamespace, newNamespace));
         } catch (IOException e) {
@@ -191,7 +197,7 @@ public class AssetsFilesNamespaceChanger {
                         modelsDir.resolve("block"),
                         namespaceCouple.oldNamespace,
                         namespaceCouple.newNamespace,
-                        null);
+                        ".json");
             }
             // Item models patch
             if (assetType.isItemModel()) {
@@ -199,7 +205,7 @@ public class AssetsFilesNamespaceChanger {
                         modelsDir.resolve("item"),
                         namespaceCouple.oldNamespace,
                         namespaceCouple.newNamespace,
-                        null);
+                        ".json");
             }
             // Skipped, invalid
             if (!assetType.isModel()) {
@@ -217,7 +223,7 @@ public class AssetsFilesNamespaceChanger {
                 assetsDirectory.resolve(namespaceCouple.newNamespace).resolve("blockstates"),
                 namespaceCouple.oldNamespace,
                 namespaceCouple.newNamespace,
-                null));
+                ".json"));
     }
 
     /**
@@ -229,7 +235,7 @@ public class AssetsFilesNamespaceChanger {
                 assetsDirectory.resolve(namespaceCouple.newNamespace).resolve("lang"),
                 namespaceCouple.oldNamespace,
                 namespaceCouple.newNamespace,
-                null));
+                ".json"));
     }
 
     /**
@@ -240,7 +246,7 @@ public class AssetsFilesNamespaceChanger {
                 assetsDirectory.resolve(namespaceCouple.newNamespace),
                 namespaceCouple.oldNamespace,
                 namespaceCouple.newNamespace,
-                null
+                ".json"
         ));
     }
 
