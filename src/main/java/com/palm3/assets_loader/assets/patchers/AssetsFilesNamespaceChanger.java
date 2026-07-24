@@ -9,11 +9,9 @@ import org.jetbrains.annotations.NotNull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -141,22 +139,19 @@ public class AssetsFilesNamespaceChanger {
 
     // Replaces all the old namespace occurrences in the given file with the new namespace. targetDir used only for logs.
     protected static void processFile(Path targetDirectory, Path file, String oldNamespace, String newNamespace) {
-        PL.logI("Found file '" + targetDirectory.relativize(file) + "'.");
         try {
             String fileAsString = Files.readString(file);
             if (fileAsString.contains(oldNamespace)) {
+                PL.logI("Found file with old namespace: '" + targetDirectory.relativize(file) + "'.");
                 fileAsString = fileAsString.replace(oldNamespace, newNamespace);
                 Files.writeString(file, fileAsString);
-                PL.logI("Patched file.");
-            } else {
-                PL.logI("File doesn't contain namespace '" + oldNamespace + "', nothing to change.");
             }
         } catch (IOException e) {
             PL.logE("Exception caught during file read/write: " + e);
         }
     }
 
-    // Changes the namespace of all the files in the given dir.
+    // Changes the namespace of all the files in the given dir. Extension can be a file.
     @SuppressWarnings("all")
     protected static void changeFilesNamespace(Path targetDirectory, String oldNamespace, String newNamespace, @Nullable String... fileExtensions) {
         try (Stream<Path> stream = Files.walk(targetDirectory)) {
@@ -175,9 +170,18 @@ public class AssetsFilesNamespaceChanger {
         }
     }
 
-    // Repeats given consumer for every existing couple of namespaces.
-    private void repeatForCouples(Consumer<AssetsFilesNamespaceChanger.NamespaceCouple> consumer) {
-        for (NamespaceCouple namespaceCouple : namespacesCouples) consumer.accept(namespaceCouple);
+    // Repeats given consumer for every existing couple of namespaces. Logs shit.
+    private void repeatForCouples(Consumer<AssetsFilesNamespaceChanger.NamespaceCouple> consumer, String fileType) {
+        if (!fileType.endsWith("s")) fileType += "s";
+        PL.logCentered("Changing " + fileType + " namespace", PL.line2, true, true);
+
+        for (NamespaceCouple namespaceCouple : namespacesCouples) {
+            consumer.accept(namespaceCouple);
+        }
+
+        PL.logCentered("Done", PL.line2, true, true);
+        PL.logSpace();
+
     }
 
     /**
@@ -197,7 +201,8 @@ public class AssetsFilesNamespaceChanger {
                         modelsDir.resolve("block"),
                         namespaceCouple.oldNamespace,
                         namespaceCouple.newNamespace,
-                        ".json");
+                        ".json"
+                        );
             }
             // Item models patch
             if (assetType.isItemModel()) {
@@ -211,7 +216,7 @@ public class AssetsFilesNamespaceChanger {
             if (!assetType.isModel()) {
                 PL.logW("Tried to change models, but specified change is " + assetType + ", skipping.");
             }
-        });
+        }, "model");
     }
 
     /**
@@ -223,7 +228,9 @@ public class AssetsFilesNamespaceChanger {
                 assetsDirectory.resolve(namespaceCouple.newNamespace).resolve("blockstates"),
                 namespaceCouple.oldNamespace,
                 namespaceCouple.newNamespace,
-                ".json"));
+                ".json"),
+                "blockstates"
+        );
     }
 
     /**
@@ -235,7 +242,9 @@ public class AssetsFilesNamespaceChanger {
                 assetsDirectory.resolve(namespaceCouple.newNamespace).resolve("lang"),
                 namespaceCouple.oldNamespace,
                 namespaceCouple.newNamespace,
-                ".json"));
+                ".json"),
+                "lang"
+        );
     }
 
     /**
@@ -246,8 +255,9 @@ public class AssetsFilesNamespaceChanger {
                 assetsDirectory.resolve(namespaceCouple.newNamespace),
                 namespaceCouple.oldNamespace,
                 namespaceCouple.newNamespace,
-                ".json"
-        ));
+                "sounds.json"),
+                "sounds"
+        );
     }
 
     /**
