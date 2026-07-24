@@ -17,4 +17,12 @@ public enum AssetType {
     public boolean isModel() {
         return EnumSet.of(ITEM_MODELS, BLOCK_MODELS, ALL_MODELS).contains(this);
     }
+
+    public boolean isItemModel() {
+        return EnumSet.of(ITEM_MODELS, ALL_MODELS).contains(this);
+    }
+
+    public boolean isBlockModel() {
+        return EnumSet.of(BLOCK_MODELS, ALL_MODELS).contains(this);
+    }
 }
