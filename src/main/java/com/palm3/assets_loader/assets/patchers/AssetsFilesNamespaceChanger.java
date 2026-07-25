@@ -19,7 +19,7 @@ import java.util.stream.Stream;
 /**
  * This class is used to patch the files inside a resourcepack that have been copied with {@link AssetsLoader}
  * by changing the assets folders namespace. The problem that results from this is that now the resourcepack has
- * the correct folder name inside the {@code assets} folder, but inside the files (blockstates, models, etc.) there's still the old namespace.
+ * the correct folder namespace inside the {@code assets} folder, but inside the files (blockstates, models, etc.) there's still the old namespace.
  * This class fixes this problem.
  *
  * <h3><a id=exampleUseScenario>Example use scenario:</a></h3>
@@ -71,7 +71,7 @@ public class AssetsFilesNamespaceChanger {
      *      List.of("oldNamespace_B", "oldNamespace_A"),
      *      List.of("newNamespace_B", "newNamespace_A")
      *
-     *      // Wrong, will throw IllegalArgumentException.
+     *      // Wrong, will throw an IllegalArgumentException.
      *      List.of("oldNamespace_A", "oldNamespace_B"),
      *      List.of("newNamespace_A", "newNamespace_B", "newNamespace_C")
      *     }
@@ -102,7 +102,7 @@ public class AssetsFilesNamespaceChanger {
     /**
      * Changes multiple namespaces in <b>one</b> pack.
      * <p>
-     *     <b>NOTE:</b> Changes the files namespaces, the namespace folders inside the {@code assets} folder should already be the new ones copied by {@link AssetsLoader}.
+     *     <b>NOTE:</b> Changes the files namespaces, the namespace folders inside the {@code assets} folder should already be the new ones.
      *     <br>
      *     This will change all the old namespaces in the <b>files</b> to the new ones for every given new namespace folder.
      *     So if whe have {@code my_pack_root/assets/newNamespace_A} and {@code my_pack_root/assets/newNamespace_B}
@@ -121,7 +121,7 @@ public class AssetsFilesNamespaceChanger {
     /**
      * Changes one namespace in <b>one</b> pack.
      * <p>
-     *     <b>NOTE:</b> Changes the files namespaces, the namespace folder inside the {@code assets} folder should already be the new one copied by {@link AssetsLoader}.
+     *     <b>NOTE:</b> Changes the files namespaces, the namespace folder inside the {@code assets} folder should already be the new one.
      *     <br>
      *     This will change the old namespace in the <b>files</b> to the new one.
      *     So if whe have {@code my_pack_root/assets/newNamespace}
@@ -171,9 +171,9 @@ public class AssetsFilesNamespaceChanger {
     }
 
     // Repeats given consumer for every existing couple of namespaces. Logs shit.
-    private void repeatForCouples(Consumer<AssetsFilesNamespaceChanger.NamespaceCouple> consumer, String fileType) {
-        if (!fileType.endsWith("s")) fileType += "s";
-        PL.logCentered("Changing " + fileType + " namespace", PL.line2, true, true);
+    private void repeatForCouples(Consumer<AssetsFilesNamespaceChanger.NamespaceCouple> consumer, String fileTypeForLogs) {
+        if (!fileTypeForLogs.endsWith("s")) fileTypeForLogs += "s";
+        PL.logCentered("Changing " + fileTypeForLogs + " namespace", PL.line2, true, true);
 
         for (NamespaceCouple namespaceCouple : namespacesCouples) {
             consumer.accept(namespaceCouple);
