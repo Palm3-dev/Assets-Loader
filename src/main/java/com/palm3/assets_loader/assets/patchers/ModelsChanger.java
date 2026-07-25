@@ -11,6 +11,12 @@ import java.util.EnumSet;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
+/**
+ * This class is used to patch minecraft models coming from different loaders or versions.
+ * <br>It offers an obj model changer method for the loader difference.
+ * <br>It also offers a static method {@link ModelsChanger#changeJsonModelString(Path, String, String, QuotationMarkPos)}
+ * that can be used to make custom changes to specific models not covered here.
+ */
 public class ModelsChanger {
 
     private static final PrettyLogging PL = new PrettyLogging(LogUtils.getLogger(), LoaderMain.DEF_PL_PARAMS);
