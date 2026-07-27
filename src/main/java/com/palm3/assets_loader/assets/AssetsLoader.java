@@ -132,6 +132,8 @@ public class AssetsLoader {
 
             copyAssetsFromJar(jarFilePath, target, jarAssetsNamespace, false, LogCopyOption.ALWAYS_LOG);
 
+            if (iconFileName != null) copyJarIcon(jarFilePath, iconFileName, packPath, "pack");
+
             //AssetsFilesNamespaceChanger.singleNamespace(packPath, jarAssetsNamespace, newNamespace).changeAll();
 
             //ModelsChanger.createNew(packPath, newNamespace, ModelsChanger.Loader.FORGE).changeModelsObjLoader(AssetType.ALL_MODELS);  // todo add conditional logging
@@ -514,6 +516,7 @@ public class AssetsLoader {
 
     /**
      * Copies the asset files from the jar file to the destination folder to be used as resourcepack.
+     * <br><b>NOTE:</b> it doesn't copy the icon file, use {@link AssetsLoader#copyJarIcon(Path, String, Path, String)} for that.
      * @param jarFilePath The location of the jar file. E.g. {@code .minecraft/mods/my_mod_file-1.0.jar}
      * @param filesDestinationPath The destination pack where the files (blockstates, models, textures...) should go in.
      * @param namespaceToCopy The assets namespace you want to copy from the jar.
@@ -602,7 +605,45 @@ public class AssetsLoader {
         }
     }
 
+    /**
+     * Copies the icon file from a mod jar.
+     * <br><b>NOTE:</b> should be used to copy an icon from a mod jar file only.
+     * @param jarFilePath The path of the mod jar.
+     * @param iconFileName The name of the icon file you want to copy.
+     * @param iconDestinationFolderPath The destination folder where the icon will be copied into.
+     * @param newIconFileName The new icon file name. If {@code null} it will remain the old one given in 'iconFileName'.
+     */
+    public static void copyJarIcon(Path jarFilePath, String iconFileName, Path iconDestinationFolderPath, @Nullable String newIconFileName) {
+        try (FileSystem jarFileSystem = FileSystems.newFileSystem(jarFilePath)) {
+            String iconFile = iconFileName;
+            if (!iconFileName.endsWith(".png")) iconFile += ".png";
 
+            Path jarIconPath = jarFileSystem.getPath(iconFile);
+
+            if (Files.exists(jarIconPath) && Files.isRegularFile(jarIconPath)) {
+                try (InputStream is = Files.newInputStream(jarIconPath)) {
+                    PL.logI("Coping icon file '" + jarIconPath + "' from jar file");
+
+                    String newIconFile = newIconFileName != null ? newIconFileName : iconFile;
+                    if (newIconFileName != null && !newIconFileName.endsWith(".png")) newIconFile += ".png";
+
+                    Files.copy(is, iconDestinationFolderPath.resolve(newIconFile), StandardCopyOption.REPLACE_EXISTING);
+                } catch (IOException e) {
+                    PL.logE("Exception caught during copy of icon file " + jarIconPath + ". Exception: {" + e);
+                }
+            } else {
+                PL.logW("No icon file found in jar file. Searched path: " + jarIconPath);
+            }
+        } catch (IOException e) {
+            PL.logE("Exception caught during jar file system creation: " + e);
+        }
+
+
+
+
+
+
+    }
 
     public enum LogCopyOption {
         ALWAYS_LOG,
