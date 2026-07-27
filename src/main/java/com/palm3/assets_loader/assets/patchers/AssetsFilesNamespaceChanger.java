@@ -173,14 +173,14 @@ public class AssetsFilesNamespaceChanger {
     // Repeats given consumer for every existing couple of namespaces. Logs shit.
     private void repeatForCouples(Consumer<AssetsFilesNamespaceChanger.NamespaceCouple> consumer, String fileTypeForLogs) {
         if (!fileTypeForLogs.endsWith("s")) fileTypeForLogs += "s";
-        PL.logCentered("Changing " + fileTypeForLogs + " namespace", PL.line2, true, true);
+        PL.logCenteredI("Changing " + fileTypeForLogs + " namespace", PL.line2, true, true);
 
         for (NamespaceCouple namespaceCouple : namespacesCouples) {
             consumer.accept(namespaceCouple);
         }
 
-        PL.logCentered("Done", PL.line2, true, true);
-        PL.logSpace();
+        PL.logCenteredI("Done", PL.line2, true, true);
+        PL.logSpaceI();
 
     }
 

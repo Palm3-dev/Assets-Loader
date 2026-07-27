@@ -142,8 +142,8 @@ public class ModelsChanger {
             return;
         }
 
-        PL.logSpace();
-        PL.logCentered("Patching " + fromLoader.name + " obj models loader", PL.line2, true, true);
+        PL.logSpaceI();
+        PL.logCenteredI("Patching " + fromLoader.name + " obj models loader", PL.line2, true, true);
 
         AtomicInteger itemModels = new AtomicInteger();
         AtomicInteger blockModels = new AtomicInteger();
@@ -176,7 +176,7 @@ public class ModelsChanger {
             }
         }
 
-        PL.logCentered("Loader patching result", PL.line2, true, true);
+        PL.logCenteredI("Loader patching result", PL.line2, true, true);
         PL.logI("Total models (json): " + (blockModels.get() + itemModels.get()));
         PL.logI("Block models: " + blockModels.get());
         PL.logI("Item models: " + itemModels.get());
