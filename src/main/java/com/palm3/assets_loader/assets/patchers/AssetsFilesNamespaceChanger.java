@@ -4,6 +4,7 @@ import com.mojang.logging.LogUtils;
 import com.palm3.assets_loader.LoaderMain;
 import com.palm3.assets_loader.PrettyLogging;
 import com.palm3.assets_loader.assets.AssetsLoader;
+import com.palm3.assets_loader.assets.NamespaceCouple;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
@@ -171,7 +172,7 @@ public class AssetsFilesNamespaceChanger {
     }
 
     // Repeats given consumer for every existing couple of namespaces. Logs shit.
-    private void repeatForCouples(Consumer<AssetsFilesNamespaceChanger.NamespaceCouple> consumer, String fileTypeForLogs) {
+    private void repeatForCouples(Consumer<NamespaceCouple> consumer, String fileTypeForLogs) {
         if (!fileTypeForLogs.endsWith("s")) fileTypeForLogs += "s";
         PL.logCenteredI("Changing " + fileTypeForLogs + " namespace", PL.line2, true, true);
 
@@ -285,30 +286,5 @@ public class AssetsFilesNamespaceChanger {
         changeBlockStates();
         changeSounds();
         changeModels(AssetType.ALL_MODELS);
-    }
-
-
-    public static class NamespaceCouple {
-        private final String oldNamespace;
-        private final String newNamespace;
-
-        /**
-         * Used to create a couple of namespaces that need to be changed.
-         * @param oldNamespace The old namespace occurring in the resourcepack files.
-         * @param newNamespace The new namespace that will replace the old one; also the name of the directory
-         *                     inside the {@code assets} folder containing all the files (blockstates, models...).
-         */
-        public NamespaceCouple(String oldNamespace, String newNamespace) {
-            this.oldNamespace = oldNamespace;
-            this.newNamespace = newNamespace;
-        }
-
-        public String getOld() {
-            return oldNamespace;
-        }
-
-        public String getNew() {
-            return newNamespace;
-        }
     }
 }
