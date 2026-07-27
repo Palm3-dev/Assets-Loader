@@ -75,7 +75,7 @@ public class PrettyLogging {
      * @param msg The message to log.
      * @param logPos The position of the line relative to the log message.
      */
-    public void logLine(String msg, LogPos logPos) {
+    public void logLineI(String msg, LogPos logPos) {
         if (logPos == LogPos.BEFORE || logPos == LogPos.BOTH)
             LOGGER.info(DEF_LINE);
         if (!msg.isEmpty()) LoaderMain.LOGGER.info(msg);
@@ -86,7 +86,7 @@ public class PrettyLogging {
     /**
      * Logs the default line (empty or of =).
      */
-    public void logLine(boolean empty) {
+    public void logLineI(boolean empty) {
         if (!empty) LOGGER.info(DEF_LINE);
         else LOGGER.info(DEF_EMPTY_LINE);
     }
@@ -130,15 +130,15 @@ public class PrettyLogging {
      * @param logPos The position relative to the message in which to apply the spaces (before, after, both).
      */
     public void logI(String msg, int spacesNumber, LogPos logPos) {
-        if (logPos == LogPos.BEFORE || logPos == LogPos.BOTH) logSpaces(spacesNumber);
+        if (logPos == LogPos.BEFORE || logPos == LogPos.BOTH) logSpacesI(spacesNumber);
         LOGGER.info(msg);
-        if (logPos == LogPos.AFTER || logPos == LogPos.BOTH) logSpaces(spacesNumber);
+        if (logPos == LogPos.AFTER || logPos == LogPos.BOTH) logSpacesI(spacesNumber);
     }
 
     /**
      * Logs a one line space.
      */
-    public void logSpace() {
+    public void logSpaceI() {
         LOGGER.info("");
     }
 
@@ -146,7 +146,7 @@ public class PrettyLogging {
      * Logs the given number of spaces (empty lines).
      * @param spacesNumber The number of spaces that should be logged. Every value under 1 will be capped at one.
      */
-    public void logSpaces(int spacesNumber) {
+    public void logSpacesI(int spacesNumber) {
         if (spacesNumber <= 0) spacesNumber = 1;
         for (int i = 0; i < spacesNumber; i++) LOGGER.info("");
     }
@@ -203,7 +203,7 @@ public class PrettyLogging {
      * @param keepSameLength If the length of the message should remain the same as the relative.
      * @param applySpaces If spaces should be applied before and after your message once centered with the relative.
      */
-    public void logCentered(String msg, String relativeTo, boolean keepSameLength, boolean applySpaces) {
+    public void logCenteredI(String msg, String relativeTo, boolean keepSameLength, boolean applySpaces) {
         LOGGER.info(centerString(msg, relativeTo, keepSameLength, applySpaces));
     }
 
