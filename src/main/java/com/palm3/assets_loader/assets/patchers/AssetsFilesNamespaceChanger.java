@@ -193,15 +193,15 @@ public class AssetsFilesNamespaceChanger {
         repeatForCouples(namespaceCouple -> {
             Path modelsDir = assetsDirectory
                     // The new namespace is used in the directory (changed when copied), only the files have the old one.
-                    .resolve(namespaceCouple.newNamespace)
+                    .resolve(namespaceCouple.newNamespace())
                     .resolve("models");
 
             // Block models patch
             if (assetType.isBlockModel()) {
                 changeFilesNamespace(
                         modelsDir.resolve("block"),
-                        namespaceCouple.oldNamespace,
-                        namespaceCouple.newNamespace,
+                        namespaceCouple.oldNamespace(),
+                        namespaceCouple.newNamespace(),
                         ".json"
                         );
             }
@@ -209,8 +209,8 @@ public class AssetsFilesNamespaceChanger {
             if (assetType.isItemModel()) {
                 changeFilesNamespace(
                         modelsDir.resolve("item"),
-                        namespaceCouple.oldNamespace,
-                        namespaceCouple.newNamespace,
+                        namespaceCouple.oldNamespace(),
+                        namespaceCouple.newNamespace(),
                         ".json");
             }
             // Skipped, invalid
@@ -226,9 +226,9 @@ public class AssetsFilesNamespaceChanger {
     public void changeBlockStates() {
         repeatForCouples(namespaceCouple -> changeFilesNamespace(
                 // The new namespace is used in the directory (changed when copied), only the files have the old one.
-                assetsDirectory.resolve(namespaceCouple.newNamespace).resolve("blockstates"),
-                namespaceCouple.oldNamespace,
-                namespaceCouple.newNamespace,
+                assetsDirectory.resolve(namespaceCouple.newNamespace()).resolve("blockstates"),
+                        namespaceCouple.oldNamespace(),
+                        namespaceCouple.newNamespace(),
                 ".json"),
                 "blockstates"
         );
@@ -240,9 +240,9 @@ public class AssetsFilesNamespaceChanger {
     public void changeLang() {
         repeatForCouples(namespaceCouple -> changeFilesNamespace(
                 // The new namespace is used in the directory (changed when copied), only the files have the old one.                    
-                assetsDirectory.resolve(namespaceCouple.newNamespace).resolve("lang"),
-                namespaceCouple.oldNamespace,
-                namespaceCouple.newNamespace,
+                assetsDirectory.resolve(namespaceCouple.newNamespace()).resolve("lang"),
+                        namespaceCouple.oldNamespace(),
+                        namespaceCouple.newNamespace(),
                 ".json"),
                 "lang"
         );
@@ -253,9 +253,9 @@ public class AssetsFilesNamespaceChanger {
      */
     public void changeSounds() {
         repeatForCouples(namespaceCouple -> changeFilesNamespace(
-                assetsDirectory.resolve(namespaceCouple.newNamespace),
-                namespaceCouple.oldNamespace,
-                namespaceCouple.newNamespace,
+                assetsDirectory.resolve(namespaceCouple.newNamespace()),
+                        namespaceCouple.oldNamespace(),
+                        namespaceCouple.newNamespace(),
                 "sounds.json"),
                 "sounds"
         );
