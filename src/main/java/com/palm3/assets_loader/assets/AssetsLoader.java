@@ -2,9 +2,7 @@ package com.palm3.assets_loader.assets;
 
 import com.mojang.logging.LogUtils;
 import com.palm3.assets_loader.PrettyLogging;
-import com.palm3.assets_loader.assets.patchers.AssetType;
 import com.palm3.assets_loader.assets.patchers.AssetsFilesNamespaceChanger;
-import com.palm3.assets_loader.assets.patchers.ModelsChanger;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.packs.*;
 import net.minecraft.server.packs.repository.*;
@@ -14,14 +12,15 @@ import net.neoforged.neoforge.event.AddPackFindersEvent;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.*;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import static com.palm3.assets_loader.LoaderMain.*;
@@ -71,10 +70,10 @@ public class AssetsLoader {
 
     private void logModInfo() {
         if (!modInfoLogged) {
-            PL.logLine(false);
-            PL.logCentered("External assets loader by Palm3", DEF_EMPTY_LINE, true, true);
-            PL.logCentered("Loads assets in-game directly from a mod jar", DEF_EMPTY_LINE, true, true);
-            PL.logCentered("Mod version: " + MOD_VERSION + "    Discord: " + DISCORD_LINK, DEF_EMPTY_LINE, true, true);
+            PL.logLineI(false);
+            PL.logCenteredI("External assets loader by Palm3", DEF_EMPTY_LINE, true, true);
+            PL.logCenteredI("Loads assets in-game directly from a mod jar", DEF_EMPTY_LINE, true, true);
+            PL.logCenteredI("Mod version: " + MOD_VERSION + "    Discord: " + DISCORD_LINK, DEF_EMPTY_LINE, true, true);
             PL.logI(PL.line1);
             PL.logI("Starting loading process -->");
             modInfoLogged = true;
@@ -120,7 +119,7 @@ public class AssetsLoader {
          * @param deletePackWhenQuit If the pack should be deleted when you close the game.
          * @param resourcePackCanBeDisabled If the pack can be moved in-game.
          */
-        public void loadAssetsCustomFolderName(AddPackFindersEvent event, String modJarFile, String jarAssetsNamespace, String newNamespace, String iconFileName,
+        public void loadAssetsCustomFolderName(AddPackFindersEvent event, String modJarFile, String jarAssetsNamespace, String newNamespace, @Nullable String iconFileName,
                                                       String resourcePackFolderName, Component packTitle, Component packDescription, boolean deletePackWhenQuit, boolean resourcePackCanBeDisabled, boolean logCopy) {
             assetsLoader.logModInfo();
 
@@ -131,11 +130,11 @@ public class AssetsLoader {
             Path packPath = GAME_DIR.resolve(assetsLoader.tempDirectory).resolve(resourcePackFolderName);
             Path target = packPath.resolve("assets").resolve(newNamespace);
 
-            copyAssetsFromJar_unsafe(jarFilePath, target, jarAssetsNamespace, iconFileName, null, false, logCopy);
+            copyAssetsFromJar(jarFilePath, target, jarAssetsNamespace, false, LogCopyOption.ALWAYS_LOG);
 
-            AssetsFilesNamespaceChanger.singleNamespace(packPath, jarAssetsNamespace, newNamespace).changeAll();
+            //AssetsFilesNamespaceChanger.singleNamespace(packPath, jarAssetsNamespace, newNamespace).changeAll();
 
-            ModelsChanger.createNew(packPath, newNamespace, ModelsChanger.Loader.FORGE).changeModelsObjLoader(AssetType.ALL_MODELS);  // todo add conditional logging
+            //ModelsChanger.createNew(packPath, newNamespace, ModelsChanger.Loader.FORGE).changeModelsObjLoader(AssetType.ALL_MODELS);  // todo add conditional logging
 
             event.addRepositorySource(packRepositorySource(
                     resourcePackFolderName,
@@ -513,6 +512,112 @@ public class AssetsLoader {
         return packConsumer -> packConsumer.accept(createPack(internalPackId, packTitle, packDescription, packPath, required));
     }
 
+    /**
+     * Copies the asset files from the jar file to the destination folder to be used as resourcepack.
+     * @param jarFilePath The location of the jar file. E.g. {@code .minecraft/mods/my_mod_file-1.0.jar}
+     * @param filesDestinationPath The destination pack where the files (blockstates, models, textures...) should go in.
+     * @param namespaceToCopy The assets namespace you want to copy from the jar.
+     * @param forceCopy If the file copy should be forced (replacing the old files), even if the files are already there.
+     * @param logCopyOption Decide if you want to log always, when you replace files or never.
+     * @see LogCopyOption
+     */
+    // Holy nested method, warning provided.
+    public static void copyAssetsFromJar(Path jarFilePath, Path filesDestinationPath, String namespaceToCopy, boolean forceCopy, LogCopyOption logCopyOption) {
+        try (FileSystem jarFileSystem = FileSystems.newFileSystem(jarFilePath, (ClassLoader) null)) {
+            PL.logI("Creating jar file system...");
+
+            Path jarAssets = jarFileSystem.getPath("assets", namespaceToCopy);
+            // The location of all the assets files inside the jar file under the given namespace.
+
+            PL.logI("Walking jar file assets and coping...");
+            PL.logI("| --> Coping assets from directory: " + jarAssets + ". Jar file system root: " + jarFilePath + File.separator);
+            PL.logI("--> | Coping assets inside directory: " + filesDestinationPath);
+
+            try (Stream<Path> jarAssetsStream = Files.walk(jarAssets)) {
+                // All used for logging
+                AtomicInteger totalPaths = new AtomicInteger();
+                AtomicInteger totalFiles = new AtomicInteger();
+                AtomicInteger totalDirectories = new AtomicInteger();
+                AtomicInteger copiedFiles = new AtomicInteger();
+                AtomicInteger copiedDirectories = new AtomicInteger();
+                AtomicBoolean allAlreadyExist = new AtomicBoolean(true);
+                AtomicInteger replacedFiles = new AtomicInteger();
+
+                jarAssetsStream.forEach(path -> {
+                    Path relativeJarAsset = jarAssets.relativize(path);
+                    // The path of the jar asset (single file here) relative to the jar file assets.
+                    // It's the path but starting only from under 'assets/namespaceToCopy/<-- from here'.
+
+                    Path copyTarget = filesDestinationPath.resolve(relativeJarAsset.toString());
+                    // After the relativization, this is the full destination path of the file/folder.
+
+                    // Logging purpose
+                    totalPaths.incrementAndGet();
+                    if (Files.isRegularFile(path)) totalFiles.incrementAndGet();
+                    if (Files.isDirectory(path)) totalDirectories.incrementAndGet();
+                    if (allAlreadyExist.get() && !Files.exists(copyTarget))
+                        allAlreadyExist.set(false);
+
+                    if ((Files.exists(copyTarget) && forceCopy) || !Files.exists(copyTarget)) {
+                        if (Files.isRegularFile(path)) {
+                            try (InputStream is = Files.newInputStream(path)) {
+                                PL.conditionalI(logCopyOption.canLog(copyTarget), "Coping file '" + relativeJarAsset + "'");
+                                Files.copy(is, copyTarget, StandardCopyOption.REPLACE_EXISTING);
+                                if (!Files.exists(copyTarget)) copiedFiles.incrementAndGet();
+                                else replacedFiles.incrementAndGet();
+                            } catch (IOException e) {
+                                PL.logE("Exception caught during copy of file " + path + " inside destination directory " + GAME_DIR.relativize(filesDestinationPath) + ". Exception: " + e);
+                            }
+
+                        } else if (Files.isDirectory(path)) {
+                            try {
+                                PL.conditionalI(logCopyOption.canLog(copyTarget), "Coping directory '" + relativeJarAsset + "'");
+                                Files.createDirectories(copyTarget);
+                                copiedDirectories.incrementAndGet();
+                            } catch (IOException e) {
+                                PL.logE("Exception caught during creation of directory " + copyTarget + ". Exception: " + e);
+                            }
+
+                        } else {
+                            PL.logW("Path " + path + " is neither a file nor a directory.");
+                        }
+                    }
+                });
+
+                PL.logCenteredI("Copy results", PL.line2, true, true);
+                PL.logI("Total elements: " + totalPaths.get());
+                PL.logI("Total directories: " + totalDirectories.get());
+                PL.logI("Total files: " + totalFiles.get());
+                PL.logI("Copied directories: " + copiedDirectories.get());
+                PL.logI("Copied files: " + copiedFiles.get());
+                PL.logI("Replaced files: " + replacedFiles.get());
+                PL.conditionalI(allAlreadyExist.get(), "-> No copy done, already existing files.");
+                PL.logI(PL.line2);
+
+            } catch (IOException e) {
+                PL.logE("Exception caught during files walk: " + e);
+            }
+        } catch (IOException e) {
+            PL.logE("Exception caught during jar file system creation: " + e);
+        }
+    }
+
+
+
+    public enum LogCopyOption {
+        ALWAYS_LOG,
+        LOG_NONEXISTENT,
+        NEVER_LOG;
+
+        LogCopyOption() {}
+
+        private boolean canLog(Path copyTarget) {
+            if (this == ALWAYS_LOG) return true;
+            return this == LOG_NONEXISTENT && !Files.exists(copyTarget);
+
+        }
+    }
+
 
 
 
@@ -573,7 +678,7 @@ public class AssetsLoader {
 
                             copiedDirectories.incrementAndGet();
 
-                        //FILE
+                            //FILE
                         } else {
                             try (InputStream is = Files.newInputStream(path)) {
                                 if (logCopy) PL.logI("Coping file " + relativeJarAsset);
@@ -590,7 +695,7 @@ public class AssetsLoader {
                         //DIR
                         if (Files.isDirectory(copyTarget))
                             PL.logI("Directory " + relativeJarAsset + " already exists.");
-                        //FILE
+                            //FILE
                         else
                             PL.logI("File " + relativeJarAsset + " already exists.");
                     }
@@ -634,109 +739,4 @@ public class AssetsLoader {
         }
     }
 
-    public static void copyAssetsFromJar_unfinished(Path jarFilePath, Path destinationPath, String namespaceToCopy, String iconFileName, @Nullable Path iconDestinationPath, boolean forceCopy, boolean logCopy) {
-        try (FileSystem jarFileSystem = FileSystems.newFileSystem(jarFilePath, (ClassLoader) null)) {
-            PL.logI("Creating jar file system...");
-
-            Path jarAssets = jarFileSystem.getPath("/assets/" + namespaceToCopy);
-            // The location of all the assets files inside the jar file under the given namespace.
-
-            PL.logI("Walking jar file assets and coping...");
-            PL.logI("| --> Coping assets from directory: " + jarAssets + ". Jar file system root: " + jarFilePath + "/");
-            PL.logI("--> | Coping assets inside directory: " + destinationPath);
-
-            try (Stream<Path> jarAssetsStream = Files.walk(jarAssets)) {
-                AtomicInteger totalFiles = new AtomicInteger(0);
-                AtomicInteger totalDirectories = new AtomicInteger(0);
-                AtomicInteger copiedFiles = new AtomicInteger(0);
-                AtomicInteger copiedDirectories = new AtomicInteger(0);
-
-                jarAssetsStream.forEach(path -> {
-
-                });
-            } catch (IOException e) {
-                PL.logE("Exception caught during files walk: " + e);
-            }
-
-                /*if (logCopy) PL.logI(PL.line2);
-
-
-
-                Files.walk(jarAssets).forEach(path -> {  // Walk all jar assets.
-
-                    Path relativeJarAsset = jarAssets.relativize(path);
-                    // The path of the jar asset (single file here) relative to the jar file assets.
-                    // It's the path but starting only from under 'assets/namespaceToCopy/<-- from here'.
-
-                    Path copyTarget = destinationPath.resolve(relativeJarAsset.toString());
-                    // After the relativization, this is the full destination path of the file/folder.
-
-                    if (!Files.exists(copyTarget) && !forceCopy) {
-                        // If current path is a directory, create a directory, otherwise copy the file.
-                        if (Files.isDirectory(path)) {
-                            try {
-                                if (logCopy) PL.logI("Coping directory " + relativeJarAsset);
-                                Files.createDirectories(copyTarget);
-                            } catch (IOException e) {
-                                PL.logE("Exception caught during creation of directory " + copyTarget + ". Exception: " + e);
-                            }
-
-                            copiedDirectories.incrementAndGet();
-
-                        } else {
-                            try (InputStream is = Files.newInputStream(path)) {
-                                if (logCopy) PL.logI("Coping file " + relativeJarAsset);
-                                Files.copy(is, copyTarget, StandardCopyOption.REPLACE_EXISTING);
-                            } catch (IOException e) {
-                                PL.logE("Exception caught during copy of file " + path + " inside destination directory " + GAME_DIR.relativize(destinationPath) + ". Exception: " + e);
-                            }
-
-                            copiedFiles.incrementAndGet();
-
-                        }
-
-                    } else if (logCopy) {
-                        if (Files.isDirectory(copyTarget))
-                            PL.logI("Directory " + relativeJarAsset + " already exists.");
-                        else
-                            PL.logI("File " + relativeJarAsset + " already exists.");
-                    }
-
-                    if (Files.isDirectory(path)) totalDirectories.incrementAndGet();
-                    else totalFiles.incrementAndGet();
-
-                });*/
-
-
-            /*
-                PL.logI("--------------- Copy results ---------------");
-                PL.logI("Total directories: " + totalDirectories.get());
-                PL.logI("Total files: " + totalFiles.get());
-                PL.logI("Copied directories: " + copiedDirectories.get());
-                PL.logI("Copied files: " + copiedFiles.get());
-                if (copiedDirectories.get() == 0 && copiedFiles.get() == 0) PL.logI("-> No copy done, already existing files.");
-                PL.logI("--------------------------------------------");*/
-
-
-            // Icon file
-            Path iconPath = jarFileSystem.getPath("/" + iconFileName + ".png");
-            if (Files.exists(iconPath)) {
-                try (InputStream is = Files.newInputStream(iconPath)) {
-                    PL.logI("Coping icon file " + iconPath + " from jar file");
-                    Files.copy(is,
-                            iconDestinationPath == null ? destinationPath.getParent().getParent().resolve("pack.png")
-                                    : iconDestinationPath.resolve("pack.png"),
-                            StandardCopyOption.REPLACE_EXISTING
-                    );
-                } catch (IOException e) {
-                    PL.logE("Exception caught during copy of icon file " + iconPath + ".png. Exception: {" + e);
-                }
-            } else {
-                PL.logW("No icon file found in jar file. Searched: " + iconPath);
-            }
-
-        } catch (IOException e) {
-            PL.logE("Exception caught during jar file system creation: " + e);
-        }
-    }
 }
