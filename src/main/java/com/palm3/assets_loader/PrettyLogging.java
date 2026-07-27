@@ -208,6 +208,15 @@ public class PrettyLogging {
     }
 
     /**
+     * Logs infos if the condition is true.
+     * @param condition The condition expression, logs if true.
+     * @param msg The message of the log.
+     */
+    public void conditionalI(boolean condition, String msg) {
+        if (condition) LOGGER.info(msg);
+    }
+
+    /**
      * Used to define default params for a {@link PrettyLogging} instance to use in other instances.
      */
     @ParametersAreNonnullByDefault
