@@ -26,8 +26,6 @@ import java.util.stream.Stream;
 import static com.palm3.assets_loader.LoaderMain.*;
 import static com.palm3.assets_loader.PrettyLogging.*;
 
-//todo add custom icon
-
 /**
  * {@link AssetsLoader} is used to load Minecraft mods assets that cannot be used and published directly from your mod.
  * This class is used to extract those assets from a normally downloaded mod {@code .jar} file and use them in-game, with some other features.
@@ -132,11 +130,14 @@ public class AssetsLoader {
 
             copyAssetsFromJar(jarFilePath, target, jarAssetsNamespace, false, LogCopyOption.ALWAYS_LOG);
 
-            if (iconFileName != null) copyJarIcon(jarFilePath, iconFileName, packPath, "pack");
+            //if (iconFileName != null) copyJarIcon(jarFilePath, iconFileName, packPath, "pack");
 
             //AssetsFilesNamespaceChanger.singleNamespace(packPath, jarAssetsNamespace, newNamespace).changeAll();
 
             //ModelsChanger.createNew(packPath, newNamespace, ModelsChanger.Loader.FORGE).changeModelsObjLoader(AssetType.ALL_MODELS);  // todo add conditional logging
+
+            //test
+            copyPngIcon(GAME_DIR.resolve(assetsLoader.tempDirectory).resolve("test_icon.png"), packPath, "pack_test", true);
 
             event.addRepositorySource(packRepositorySource(
                     resourcePackFolderName,
@@ -629,7 +630,7 @@ public class AssetsLoader {
 
                     Files.copy(is, iconDestinationFolderPath.resolve(newIconFile), StandardCopyOption.REPLACE_EXISTING);
                 } catch (IOException e) {
-                    PL.logE("Exception caught during copy of icon file " + jarIconPath + ". Exception: {" + e);
+                    PL.logE("Exception caught during copy of icon file " + jarIconPath + ". Exception: " + e);
                 }
             } else {
                 PL.logW("No icon file found in jar file. Searched path: " + jarIconPath);
@@ -643,6 +644,40 @@ public class AssetsLoader {
 
 
 
+    }
+
+    /**
+     * Copies an icon file from the given path.
+     * @param iconPath The path of the icon file.
+     * @param iconDestinationFolderPath The destination folder where the icon will be copied into.
+     * @param newIconFileName The new icon file name. If {@code null} it will remain the old one (last part of the path, the file).
+     * @param morelDebug If more debug infos on the icon file you're trying to copy should be printed.
+     *                   <br>It's here for testing purposes only, should always be set false when you're sure the copy works.
+     */
+    public static void copyPngIcon(Path iconPath, Path iconDestinationFolderPath, @Nullable String newIconFileName, boolean morelDebug) {
+        if (morelDebug) {
+            PL.logI("Debug infos about the icon file you're trying to copy:");
+            PL.logI("Given icon path: " + iconPath);
+            PL.logI("Readable: " + Files.isReadable(iconPath));
+            PL.logI("Exists: " + Files.exists(iconPath));
+            PL.logI("Is regular file: " + Files.isRegularFile(iconPath));
+            PL.logI("Path ends with '.png': " + iconPath.getFileName().toString().endsWith(".png"));
+        }
+
+        if (Files.exists(iconPath) && Files.isRegularFile(iconPath) && iconPath.getFileName().toString().endsWith(".png")) {
+            try (InputStream is = Files.newInputStream(iconPath)) {
+                PL.logI("Coping PNG icon file '" + iconPath + "'");
+
+                String newIconFile = newIconFileName != null ? newIconFileName : iconPath.getFileName().toString();
+                if (newIconFileName != null && !newIconFileName.endsWith(".png")) newIconFile += ".png";
+
+                Files.copy(is, iconDestinationFolderPath.resolve(newIconFile), StandardCopyOption.REPLACE_EXISTING);
+            } catch (IOException e) {
+                PL.logE("Exception caught during copy of PNG icon file " + iconPath + ". Exception: " + e);
+            }
+        } else {
+            PL.logW("No PNG icon file found. Searched path: " + iconPath);
+        }
     }
 
     public enum LogCopyOption {
