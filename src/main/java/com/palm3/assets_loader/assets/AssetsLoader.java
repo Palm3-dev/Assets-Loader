@@ -25,6 +25,7 @@ import java.util.stream.Stream;
 import static com.palm3.assets_loader.LoaderMain.*;
 import static com.palm3.assets_loader.PrettyLogging.*;
 
+//todo update here, add comments
 /**
  * {@link AssetsLoader} is used to load Minecraft mods assets that cannot be used and published directly from your mod.
  * This class is used to extract those assets from a normally downloaded mod {@code .jar} file and use them in-game, with some other features.
@@ -36,34 +37,7 @@ public class AssetsLoader {
     private static final Path GAME_DIR = FMLPaths.GAMEDIR.get();
     private static final Path MOD_DIR = FMLPaths.MODSDIR.get();
 
-    // Check lists of namespaces, jar files, etc. since they need to have matching values in order to be used.
-    /*private static void checkListSizesAndThrow(List<String> modJarFiles, List<String> jarAssetsNamespaces, @Nullable List<String> newNamespaces) throws IllegalArgumentException {
-        if (newNamespaces == null) {
-            if (modJarFiles.size() != jarAssetsNamespaces.size()) {
-                int jarFilesSize = modJarFiles.size();
-                int jarNamespacesSize = jarAssetsNamespaces.size();
-                String exceptionList;
 
-                if (jarFilesSize > jarNamespacesSize) exceptionList = "'mod_jar_files'";
-                else exceptionList = "'jar_assets_namespaces'";
-
-                throw new IllegalArgumentException("All lists must be the same size! Affected list: " + exceptionList);
-            }
-        } else {
-            if (modJarFiles.size() != jarAssetsNamespaces.size() || modJarFiles.size() != newNamespaces.size()) {
-                int jarFilesSize = modJarFiles.size();
-                int jarNamespacesSize = jarAssetsNamespaces.size();
-                int newNamespacesSize = newNamespaces.size();
-                String exceptionList;
-
-                if (jarFilesSize > jarNamespacesSize || jarFilesSize > newNamespacesSize) exceptionList = "'mod_jar_files'";
-                else if (jarNamespacesSize > jarFilesSize) exceptionList = "'jar_assets_namespaces'";
-                else exceptionList = "'new_namespaces'";
-
-                throw new IllegalArgumentException("All lists must be the same size! Affected list: " + exceptionList);
-            }
-        }
-    }*/
 
     private void logModInfo() {
         PL.logLineI(false);
@@ -79,7 +53,7 @@ public class AssetsLoader {
 
 
     //================== STATICS =====================
-    // Use those if you want, but you need to know a little what you're doing.
+    private static void keepFuckingJavadocRenderedCauseItTriggersToSeeItNotRenderedBtwIfThereAreSettingsToChangeItIDontHaveTimeAndWillToFindThem() {}
     /**
      * Creates a directory inside the game folder {@code .minecraft}.
      * @param directory The directory you want to create, can also be a path.
@@ -392,6 +366,45 @@ public class AssetsLoader {
             if (this == ALWAYS_LOG) return true;
             return this == LOG_NONEXISTENT && !Files.exists(copyTarget);
 
+        }
+    }
+
+    /**
+     * Loads one mod jar assets to a resourcepack. Creates the temporary directory if it doesn't exist.
+     * @param event The add pack finders event.
+     * @param tempDirectory The temporary directory that will contain the resourcepack.
+     * @param hidden If the temporary directory is hidden.
+     * @param modJarFile The mod jar file name, including the {@code .jar} extension.
+     * @param jarAssetsNamespace The namespace you want to copy.
+     * @param newNamespace The new namespace, set to null to keep the old one.
+     * @param iconFileName The name of the jar icon file.
+     * @param packInfos An instance of {@link ResourcePackInfos}.
+     * @param forceCopy If the copy of the fle should be forced, replacing the existent ones.
+     * @param logCopyOption Defines the type of copy logs.
+     * @throws NoSuchFileException If the temp directory doesn't exist (should never happen).
+     */
+    public static void loadPackFromJar(AddPackFindersEvent event, String tempDirectory, boolean hidden, String modJarFile, String jarAssetsNamespace, @Nullable String newNamespace,
+                                       String iconFileName, ResourcePackInfos packInfos, boolean forceCopy, LogCopyOption logCopyOption) throws NoSuchFileException {
+        modJarFile = modJarFile.endsWith(".jar") ? modJarFile : modJarFile + ".jar";
+        createDirectory(tempDirectory, hidden);
+        try {
+            Path jarFilePath = MOD_DIR.resolve(modJarFile);
+            Path packPath = getDirectoryPath(tempDirectory, hidden).resolve(packInfos.packFolderName());
+            Path assetsDestinationPath = packPath.resolve("assets").resolve(newNamespace == null ? jarAssetsNamespace : newNamespace);
+
+            PL.logI("Starting assets loading process ->");
+            copyAssetsFromJar(jarFilePath, assetsDestinationPath, jarAssetsNamespace, forceCopy, logCopyOption);
+            copyJarIcon(jarFilePath, iconFileName, packPath, "pack");
+
+            event.addRepositorySource(packRepositorySource(packInfos.packFolderName(), packInfos.packTitle(), packInfos.packDescription(), packPath, packInfos.requiredPack()));
+
+            if (packInfos.deletePack()) {
+                Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                    deleteDirectory(tempDirectory + File.separator + packInfos.packFolderName(), true, hidden);
+                }));
+            }
+        } catch (IOException e) {
+            throw new NoSuchFileException("The directory '" + getDirectoryPath(tempDirectory, hidden) + "' doesn't exist in the game folder.");
         }
     }
 
