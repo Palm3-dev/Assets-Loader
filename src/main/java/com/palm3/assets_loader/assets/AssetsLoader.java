@@ -2,7 +2,6 @@ package com.palm3.assets_loader.assets;
 
 import com.mojang.logging.LogUtils;
 import com.palm3.assets_loader.PrettyLogging;
-import com.palm3.assets_loader.assets.patchers.AssetsFilesNamespaceChanger;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.packs.*;
 import net.minecraft.server.packs.repository.*;
@@ -38,7 +37,7 @@ public class AssetsLoader {
     private static final Path MOD_DIR = FMLPaths.MODSDIR.get();
 
     // Check lists of namespaces, jar files, etc. since they need to have matching values in order to be used.
-    private static void checkListSizesAndThrow(List<String> modJarFiles, List<String> jarAssetsNamespaces, @Nullable List<String> newNamespaces) throws IllegalArgumentException {
+    /*private static void checkListSizesAndThrow(List<String> modJarFiles, List<String> jarAssetsNamespaces, @Nullable List<String> newNamespaces) throws IllegalArgumentException {
         if (newNamespaces == null) {
             if (modJarFiles.size() != jarAssetsNamespaces.size()) {
                 int jarFilesSize = modJarFiles.size();
@@ -64,7 +63,7 @@ public class AssetsLoader {
                 throw new IllegalArgumentException("All lists must be the same size! Affected list: " + exceptionList);
             }
         }
-    }
+    }*/
 
     private void logModInfo() {
         PL.logLineI(false);
@@ -113,6 +112,25 @@ public class AssetsLoader {
             }
         } else {
             PL.logI("Directory '" + directory + "' already present in game folder...");
+        }
+    }
+
+    /**
+     * Returns a directory inside the game folder {@code .minecraft} as {@link Path}.
+     * @param directory The directory you want to get, can also be a path.
+     *                  E.g. {@code assets/temp}. Don't insert points in the path/folder name, they will get deleted.
+     * @param hidden If the directory is hidden.
+     * @return The given string directory as {@link Path}.
+     * @throws NoSuchFileException If the requested directory as path doesn't exist.
+     */
+    public static Path getDirectoryPath(String directory, boolean hidden) throws NoSuchFileException {
+        if (directory.contains(".")) directory = directory.replace(".", "");
+        Path dir = hidden ? GAME_DIR.resolve("." + directory) : GAME_DIR.resolve(directory);
+
+        if (Files.exists(dir)) {
+            return dir;
+        } else {
+            throw new NoSuchFileException("Directory '" + directory + "' you're trying to get as Path doesn't exist in game folder.");
         }
     }
 
@@ -330,6 +348,7 @@ public class AssetsLoader {
 
     /**
      * Copies an icon file from the given path.
+     * <br><b>NOTE:</b> the method replaces a possibly already existing icon in the destination.
      * @param iconPath The path of the icon file.
      * @param iconDestinationFolderPath The destination folder where the icon will be copied into.
      * @param newIconFileName The new icon file name. If {@code null} it will remain the old one (last part of the path, the file).
