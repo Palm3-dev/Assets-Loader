@@ -11,6 +11,7 @@ import java.util.List;
  * @param newNamespace The new namespace that will replace the old one; also the name of the directory
  *                     inside the {@code assets} folder containing all the files (blockstates, models...).
  */
+@ParametersAreNonnullByDefault
 public record NamespaceCouple(String oldNamespace, String newNamespace) {
     /**
      * Creates a list of multiple {@link NamespaceCouple}.
@@ -37,7 +38,6 @@ public record NamespaceCouple(String oldNamespace, String newNamespace) {
      * @return The {@link List} of namespaces couples.
      * @throws IllegalArgumentException If the lists are different in dimension.
      */
-    @ParametersAreNonnullByDefault
     public static List<NamespaceCouple> createMultipleNamespacesList(List<String> oldNamespaces, List<String> newNamespaces) throws IllegalArgumentException {
         // Check lists or throw
         if (oldNamespaces.size() != newNamespaces.size()) {
@@ -60,7 +60,6 @@ public record NamespaceCouple(String oldNamespace, String newNamespace) {
      * @param newNamespace The new namespace.
      * @return The {@link List} of namespaces couples.
      */
-    @ParametersAreNonnullByDefault
     public static List<NamespaceCouple> createSingleNamespacesList(String oldNamespace, String newNamespace) throws IllegalArgumentException {
         List<NamespaceCouple> namespacesCouples = new ArrayList<>();
         namespacesCouples.add(new NamespaceCouple(oldNamespace, newNamespace));
