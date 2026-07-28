@@ -2,6 +2,7 @@ package com.palm3.assets_loader.assets;
 
 import com.mojang.logging.LogUtils;
 import com.palm3.assets_loader.PrettyLogging;
+import com.palm3.assets_loader.assets.patchers.AssetsFilesNamespaceChanger;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.packs.*;
 import net.minecraft.server.packs.repository.*;
@@ -395,6 +396,10 @@ public class AssetsLoader {
             PL.logI("Starting assets loading process ->");
             copyAssetsFromJar(jarFilePath, assetsDestinationPath, jarAssetsNamespace, forceCopy, logCopyOption);
             copyJarIcon(jarFilePath, iconFileName, packPath, "pack");
+
+            if (newNamespace != null && !newNamespace.equals(jarAssetsNamespace)) {
+                AssetsFilesNamespaceChanger.singleNamespace(packPath, jarAssetsNamespace, newNamespace).changeAll();
+            }
 
             event.addRepositorySource(packRepositorySource(packInfos.packFolderName(), packInfos.packTitle(), packInfos.packDescription(), packPath, packInfos.requiredPack()));
 
