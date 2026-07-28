@@ -71,7 +71,7 @@ public class AssetsFilesNamespaceChanger {
      * </p>
      * @param packDirectory The directory containing the pack you want to modify the namespaces (the one with assets folder, the icon, etc.).
      * @param namespacesCouples A {@link List} of {@link NamespaceCouple} with the old and new namespaces couplers.
-     *                          To easily create one you can use {@link NamespaceCouple#createNamespacesList(List, List)}
+     *                          To easily create one you can use {@link NamespaceCouple#createMultipleNamespacesList(List, List)}
      * @return A new instance of {@link AssetsFilesNamespaceChanger}.
      */
     public static AssetsFilesNamespaceChanger multipleNamespaces(Path packDirectory, List<NamespaceCouple> namespacesCouples) {
