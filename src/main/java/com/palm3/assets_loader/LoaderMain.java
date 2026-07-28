@@ -15,9 +15,7 @@ import net.neoforged.fml.event.lifecycle.ModLifecycleEvent;
 import net.neoforged.neoforge.event.AddPackFindersEvent;
 import org.slf4j.Logger;
 
-//todo fix Files.walk() not using try, remove concatenation of / in paths, use resolve
 //todo remove jar files that don't load after first startup
-//todo log decently
 //todo enable/disable assets patching
 //todo move in main the introdutcion/start in asset loader
 //todo add mod name for the one it's loading the assets to know who's using the classes
