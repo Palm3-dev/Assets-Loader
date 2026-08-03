@@ -2,7 +2,6 @@ package com.palm3.assets_loader;
 
 import com.mojang.logging.LogUtils;
 import com.palm3.assets_loader.assets.*;
-import com.palm3.assets_loader.assets.patchers.ModelsChanger;
 import net.minecraft.network.chat.Component;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -27,11 +26,10 @@ public class LoaderMain {
     public static final String MOD_ID = "assets_loader";
     public static final String MOD_VERSION = "1.0.0";
     public static final String DISCORD_LINK = "https://discord.com/invite/BuMv2f8epp";
-    public static final ModelsChanger.Loader MOD_LOADER = ModelsChanger.Loader.NEOFORGE;
+    public static final ModLoader MOD_LOADER = ModLoader.NEOFORGE;
 
     public LoaderMain(IEventBus modEventBus) {
         modEventBus.addListener(LoaderMain::packFindersEvent);
-        AssetsInGameTest.BLOCKS.register(modEventBus);
     }
 
     public static final AssetsLoader ASSET_LOADER = new AssetsLoader(".temp_assets", true, MOD_ID + "_mod_id");
@@ -43,7 +41,7 @@ public class LoaderMain {
         //testing, praying it works, fingers crossed, even more than the ones i have by default
         // works, idk how i did it
         JarLoadingInfos jarLoadingInfos = new JarLoadingInfos(
-                JarLoadingInfos.createCouplesList(
+                JarLoadingInfos.createJarNamespacesMap(
                         List.of("Create-Dreams-n-Desires-1.19.2-0.2.5b.PREBETA.jar", "design_decor-0.4.0b-1.20.1.jar"),
                         List.of(
                                 List.of(new NamespaceCouple("create_dd", "create_dream_des_PREBETA"), new NamespaceCouple("create", "create_space_from_dream_des_PREBETA")),
@@ -53,7 +51,7 @@ public class LoaderMain {
                 ),
                 new JarLoadingInfos.JarIconFile("Create-Dreams-n-Desires-1.19.2-0.2.5b.PREBETA.jar", "pack"),
                 false,
-                ModelsChanger.Loader.FORGE,
+                ModLoader.FORGE,
                 AssetsLoader.LogCopyOption.ALWAYS_LOG
         );
 
@@ -67,7 +65,7 @@ public class LoaderMain {
 
         PackLoadingContext context = new PackLoadingContext(ASSET_LOADER, jarLoadingInfos, packInfos, true);
 
-        AssetsLoader.Loaders.loadSinglePackMultiJarMultiNamespace(event, context);
+        AssetsLoader.loadSinglePackMultiJarMultiNamespace(event, context);
 
 
         /*assetsLoader.single.loadAssetsCustomFolderName(

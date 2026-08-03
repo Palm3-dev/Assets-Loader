@@ -2,6 +2,7 @@ package com.palm3.assets_loader.assets.patchers;
 
 import com.mojang.logging.LogUtils;
 import com.palm3.assets_loader.LoaderMain;
+import com.palm3.assets_loader.ModLoader;
 import com.palm3.assets_loader.PrettyLogging;
 
 import java.io.IOException;
@@ -21,10 +22,10 @@ public class ModelsChanger {
 
     private static final PrettyLogging PL = new PrettyLogging(LogUtils.getLogger(), LoaderMain.DEF_PL_PARAMS);
     private final Path modelsDirectory;
-    private final Loader fromLoader;
-    private final Loader toLoader;
+    private final ModLoader fromLoader;
+    private final ModLoader toLoader;
 
-    protected ModelsChanger(Path packDirectory, String namespace, Loader fromLoader, Loader toLoader) {
+    protected ModelsChanger(Path packDirectory, String namespace, ModLoader fromLoader, ModLoader toLoader) {
         modelsDirectory = packDirectory.resolve("assets").resolve(namespace).resolve("models");
         this.fromLoader = fromLoader;
         this.toLoader = toLoader;
@@ -37,7 +38,7 @@ public class ModelsChanger {
      * @param fromLoader The loader that the models currently have, will be changed.
      * @param toLoader The new loader to change the models loader to.
      */
-    public static ModelsChanger createNew(Path packDirectory, String namespace, Loader fromLoader, Loader toLoader) {
+    public static ModelsChanger createNew(Path packDirectory, String namespace, ModLoader fromLoader, ModLoader toLoader) {
         return new ModelsChanger(packDirectory, namespace, fromLoader, toLoader);
     }
 
@@ -47,7 +48,7 @@ public class ModelsChanger {
      * @param namespace The namespace (the folder) containing the model files. E.g. {@code pack_root/assets/my_namespace <-- this}.
      * @param fromLoader The loader that the models currently have, will be changed.
      */
-    public static ModelsChanger createNew(Path packDirectory, String namespace, Loader fromLoader) {
+    public static ModelsChanger createNew(Path packDirectory, String namespace, ModLoader fromLoader) {
         return new ModelsChanger(packDirectory, namespace, fromLoader, LoaderMain.MOD_LOADER);
     }
 
@@ -111,22 +112,6 @@ public class ModelsChanger {
             }
         } else {
             PL.logI("Tried to change a json string of a non-json file: '" + modelFile.getFileName() + "'");
-        }
-    }
-
-    /// Represents a mod loader.
-    public enum Loader {
-        FORGE("forge"),
-        NEOFORGE("neoforge"),
-
-        /// @deprecated Not used right now.
-        @Deprecated
-        FABRIC("fabric");
-
-        public final String name;
-
-        Loader(String name) {
-            this.name = name;
         }
     }
 

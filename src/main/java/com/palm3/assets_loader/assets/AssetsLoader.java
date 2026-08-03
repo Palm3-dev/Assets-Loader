@@ -26,10 +26,13 @@ import java.util.stream.Stream;
 import static com.palm3.assets_loader.LoaderMain.*;
 import static com.palm3.assets_loader.PrettyLogging.*;
 
+//todo finish the javadoc
 /**
  * {@link AssetsLoader} is used to load Minecraft mods assets that cannot be used and published directly from your mod.
  * This class is used to extract those assets from a normally downloaded mod {@code .jar} file and use them in-game, with some other features.
  * The cool thing is that the mod version and loader are completely ignored.
+ * <br><b>NOTE:</b> the loader could tell the user that an old or unsupported loader mod is unable to load, but you can still play the game just fine.
+ * To remove the message the next times, use ---add here-----.
  */
 @ParametersAreNonnullByDefault
 public class AssetsLoader {
@@ -70,87 +73,83 @@ public class AssetsLoader {
 
 
     //todo add atomic boolean to know if icon copied
-    public static class Loaders {
-        public static void loadSinglePackMultiJarMultiNamespace(AddPackFindersEvent event, PackLoadingContext context) {
-            AssetsLoader assetsLoader = context.assetsLoader();
-            JarLoadingInfos jarLoadingInfos = context.jarLoadingInfos();
-            ResourcePackInfos packInfos = context.packInfos();
-            Path packPath = assetsLoader.tempDirectoryPath.resolve(packInfos.packFolderName());
 
-            jarLoadingInfos.namespaceCouplesByJarFile.forEach((modJarFile, namespaceCouples) -> {
-                Path jarFilePath = MOD_DIR.resolve(modJarFile);
-                for (NamespaceCouple namespaceCouple : namespaceCouples) {
-                    Path assetsDestinationPath = packPath.resolve("assets").resolve(namespaceCouple.newOrSameNamespace());
+    //================= STATIC LOADERS - FULL =================
+    public static void loadSinglePackMultiJarMultiNamespace(AddPackFindersEvent event, PackLoadingContext context) {
+        AssetsLoader assetsLoader = context.assetsLoader();
+        JarLoadingInfos jarLoadingInfos = context.jarLoadingInfos();
+        ResourcePackInfos packInfos = context.packInfos();
+        Path packPath = assetsLoader.tempDirectoryPath.resolve(packInfos.packFolderName());
 
-                    if (!context.distinguishEventFireTime() || assetsLoader.initialPackLoad) {
-                        PL.logI("Starting loading process for mod: " + assetsLoader.loaderModName + ", jar namespace: " + namespaceCouple.oldNamespace() + " ->");
-                        copyAssetsFromJar(jarFilePath, assetsDestinationPath, namespaceCouple.oldNamespace(), jarLoadingInfos.forceCopyAssets, jarLoadingInfos.logCopyOption);
-                        if (jarLoadingInfos.jarIconFile.iconJarFile().equals(modJarFile))
-                            copyJarIcon(jarFilePath, jarLoadingInfos.jarIconFile.iconFileName(), packPath, "pack");
-                    }
-
-                    if (jarLoadingInfos.oldObjLoader != null)
-                        ModelsChanger.createNew(packPath, namespaceCouple.newOrSameNamespace(), jarLoadingInfos.oldObjLoader).changeModelsObjLoader(AssetType.ALL_MODELS);
-                }
-            });
-
-            AssetsFilesNamespaceChanger.multipleNamespaces(packPath, jarLoadingInfos.getNonIndexedNamespaceCouplesList()).changeAll();
-
-            PL.logI("Adding resourcepack with internal id '" + packInfos.packFolderName() + "' to game packs.");
-            event.addRepositorySource(packRepositorySource(packInfos.packFolderName(), packInfos.packTitle(), packInfos.packDescription(), packPath, packInfos.requiredPack()));
-
-            if (packInfos.deletePack()) {
-                Runtime.getRuntime().addShutdownHook(new Thread(() -> deleteDirectory(assetsLoader.tempDirectory, false, assetsLoader.tempDirIsHidden)));
-            }
-        }
-
-        /**
-         * Loads one mod jar assets to a resourcepack. Creates the temporary directory if it doesn't exist.
-         * @deprecated  This method is exposed if you want to use it for specific cases, but its usage is not recommended.
-         * Use the other loaders instead, or create your own custom method with the provided methods in {@link AssetsLoader}.
-         * @param event The add pack finders event.
-         * @param tempDirectory The temporary directory that will contain the resourcepack.
-         * @param hidden If the temporary directory is hidden.
-         * @param modJarFile The mod jar file name, including the {@code .jar} extension.
-         * @param jarAssetsNamespace The namespace you want to copy.
-         * @param newNamespace The new namespace, set to null to keep the old one.
-         * @param iconFileName The name of the jar icon file.
-         * @param packInfos An instance of {@link ResourcePackInfos}.
-         * @param forceCopy If the copy of the fle should be forced, replacing the existent ones.
-         * @param logCopyOption Defines the type of copy logs.
-         * @throws NoSuchFileException If the temp directory doesn't exist (should never happen).
-         */
-        @Deprecated
-        public static void loadPackFromJar(AddPackFindersEvent event, String tempDirectory, boolean hidden, String modJarFile, String jarAssetsNamespace, @Nullable String newNamespace,
-                                           String iconFileName, ResourcePackInfos packInfos, boolean forceCopy, LogCopyOption logCopyOption) throws NoSuchFileException {
-            modJarFile = modJarFile.endsWith(".jar") ? modJarFile : modJarFile + ".jar";
-            createDirectoryAndGetPath(tempDirectory, hidden);
-
+        jarLoadingInfos.namespaceCouplesByJarFile().forEach((modJarFile, namespaceCouples) -> {
             Path jarFilePath = MOD_DIR.resolve(modJarFile);
-            Path packPath = createDirectoryAndGetPath(tempDirectory, hidden).resolve(packInfos.packFolderName());
-            Path assetsDestinationPath = packPath.resolve("assets").resolve(newNamespace == null ? jarAssetsNamespace : newNamespace);
+            for (NamespaceCouple namespaceCouple : namespaceCouples) {
+                Path assetsDestinationPath = packPath.resolve("assets").resolve(namespaceCouple.newOrSameNamespace());
 
-            PL.logI("Starting assets loading process ->");
-            copyAssetsFromJar(jarFilePath, assetsDestinationPath, jarAssetsNamespace, forceCopy, logCopyOption);
-            copyJarIcon(jarFilePath, iconFileName, packPath, "pack");
+                if (!context.distinguishEventFireTime() || assetsLoader.initialPackLoad) {
+                    assetsLoader.initialPackLoad = false;
+                    PL.logI("Starting loading process for mod: " + assetsLoader.loaderModName + ", jar namespace: " + namespaceCouple.oldNamespace() + " ->");
+                    copyAssetsFromJar(jarFilePath, assetsDestinationPath, namespaceCouple.oldNamespace(), jarLoadingInfos.forceCopyAssets(), jarLoadingInfos.logCopyOption());
+                    if (jarLoadingInfos.jarIconFile().iconJarFile().equals(modJarFile))
+                        copyJarIcon(jarFilePath, jarLoadingInfos.jarIconFile().iconFileName(), packPath, "pack");
+                }
 
-            if (newNamespace != null && !newNamespace.equals(jarAssetsNamespace)) {
-                AssetsFilesNamespaceChanger.singleNamespace(packPath, jarAssetsNamespace, newNamespace).changeAll();
+                if (jarLoadingInfos.oldObjLoader() != null)
+                    ModelsChanger.createNew(packPath, namespaceCouple.newOrSameNamespace(), jarLoadingInfos.oldObjLoader()).changeModelsObjLoader(AssetType.ALL_MODELS);
             }
+        });
 
-            event.addRepositorySource(packRepositorySource(packInfos.packFolderName(), packInfos.packTitle(), packInfos.packDescription(), packPath, packInfos.requiredPack()));
+        AssetsFilesNamespaceChanger.multipleNamespaces(packPath, jarLoadingInfos.getNonIndexedNamespaceCouplesList(true)).changeAll();
 
-            if (packInfos.deletePack()) {
-                Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                    deleteDirectory(tempDirectory + File.separator + packInfos.packFolderName(), true, hidden);
-                }));
-            }
+        PL.logI("Adding resourcepack with internal id '" + packInfos.packFolderName() + "' to game packs.");
+        event.addRepositorySource(packRepositorySource(packInfos.packFolderName(), packInfos.packTitle(), packInfos.packDescription(), packPath, packInfos.requiredPack()));
+
+        if (packInfos.deletePack()) {
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> deleteDirectory(assetsLoader.tempDirectory, false, assetsLoader.tempDirIsHidden)));
         }
     }
 
+    /**
+     * Loads one mod jar assets to a resourcepack. Creates the temporary directory if it doesn't exist.
+     * @deprecated  This method is exposed if you want to use it for specific cases, but its usage is not recommended.
+     * Use the other loaders instead, or create your own custom method with the provided methods in {@link AssetsLoader}.
+     * @param event The add pack finders event.
+     * @param tempDirectory The temporary directory that will contain the resourcepack.
+     * @param hidden If the temporary directory is hidden.
+     * @param modJarFile The mod jar file name, including the {@code .jar} extension.
+     * @param jarAssetsNamespace The namespace you want to copy.
+     * @param newNamespace The new namespace, set to null to keep the old one.
+     * @param iconFileName The name of the jar icon file.
+     * @param packInfos An instance of {@link ResourcePackInfos}.
+     * @param forceCopy If the copy of the fle should be forced, replacing the existent ones.
+     * @param logCopyOption Defines the type of copy logs.
+     */
+    @Deprecated
+    public static void loadPackFromJar(AddPackFindersEvent event, String tempDirectory, boolean hidden, String modJarFile, String jarAssetsNamespace, @Nullable String newNamespace,
+                                       String iconFileName, ResourcePackInfos packInfos, boolean forceCopy, LogCopyOption logCopyOption) {
+        modJarFile = modJarFile.endsWith(".jar") ? modJarFile : modJarFile + ".jar";
+        createDirectoryAndGetPath(tempDirectory, hidden);
 
+        Path jarFilePath = MOD_DIR.resolve(modJarFile);
+        Path packPath = createDirectoryAndGetPath(tempDirectory, hidden).resolve(packInfos.packFolderName());
+        Path assetsDestinationPath = packPath.resolve("assets").resolve(newNamespace == null ? jarAssetsNamespace : newNamespace);
 
+        PL.logI("Starting assets loading process ->");
+        copyAssetsFromJar(jarFilePath, assetsDestinationPath, jarAssetsNamespace, forceCopy, logCopyOption);
+        copyJarIcon(jarFilePath, iconFileName, packPath, "pack");
 
+        if (newNamespace != null && !newNamespace.equals(jarAssetsNamespace)) {
+            AssetsFilesNamespaceChanger.singleNamespace(packPath, jarAssetsNamespace, newNamespace).changeAll();
+        }
+
+        event.addRepositorySource(packRepositorySource(packInfos.packFolderName(), packInfos.packTitle(), packInfos.packDescription(), packPath, packInfos.requiredPack()));
+
+        if (packInfos.deletePack()) {
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                deleteDirectory(tempDirectory + File.separator + packInfos.packFolderName(), true, hidden);
+            }));
+        }
+    }
 
 
 

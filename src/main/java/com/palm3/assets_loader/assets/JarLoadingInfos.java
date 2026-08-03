@@ -2,8 +2,8 @@ package com.palm3.assets_loader.assets;
 
 import com.mojang.logging.LogUtils;
 import com.palm3.assets_loader.LoaderMain;
+import com.palm3.assets_loader.ModLoader;
 import com.palm3.assets_loader.PrettyLogging;
-import com.palm3.assets_loader.assets.patchers.ModelsChanger;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Provides all the information about the jar files, icon and namespaces needed to load a pack.
  */
 public record JarLoadingInfos(LinkedHashMap<String, List<NamespaceCouple>> namespaceCouplesByJarFile, JarLoadingInfos.JarIconFile jarIconFile,
-                              boolean forceCopyAssets, @Nullable ModelsChanger.Loader oldObjLoader, AssetsLoader.LogCopyOption logCopyOption) {
+                              boolean forceCopyAssets, @Nullable ModLoader oldObjLoader, AssetsLoader.LogCopyOption logCopyOption) {
     private static final PrettyLogging PL = new PrettyLogging(LogUtils.getLogger(), LoaderMain.DEF_PL_PARAMS);
 
     /**
