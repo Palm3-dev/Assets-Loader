@@ -9,7 +9,7 @@ import java.util.List;
  *
  * @param oldNamespace The old namespace occurring in the resourcepack files.
  * @param newOrSameNamespace The new namespace that will replace the old one; also the name of the directory
- *                     inside the {@code assets} folder containing all the files (blockstates, models...). Can be the same as the old one.
+ *                     inside the {@code assets} folder containing all the files (blockstates, models...). Can be the same as the old one (thus won't be changed).
  */
 @ParametersAreNonnullByDefault
 public record NamespaceCouple(String oldNamespace, String newOrSameNamespace) {
