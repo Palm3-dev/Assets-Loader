@@ -10,7 +10,8 @@ import java.util.List;
  *
  * @param oldNamespace The old namespace occurring in the resourcepack files.
  * @param newOrSameNamespace The new namespace that will replace the old one; also the name of the directory
- *                     inside the {@code assets} folder containing all the files (blockstates, models...). Can be the same as the old one (thus won't be changed).
+ *                           inside the {@code assets} folder containing all the files (blockstates, models...).
+ *                           Can be the same as the old one (thus the old one won't be changed).
  */
 @ParametersAreNonnullByDefault
 public record NamespaceCouple(String oldNamespace, String newOrSameNamespace) {
@@ -20,9 +21,10 @@ public record NamespaceCouple(String oldNamespace, String newOrSameNamespace) {
      * <b>NOTE:</b> Pay attention while using this method.
      * The general order you put the namespaces in the lists is not important; what is important is that you
      * respect the same element number you have chosen in both lists, otherwise you'll get errors.
-     * <br>Examples of lists:
      * <pre>
      *     {@code
+     *      //====== Examples of lists ======
+     *
      *      // Accepted, order (A, B...) is not important.
      *      List.of("oldNamespace_B", "oldNamespace_A"),
      *      List.of("newNamespace_B", "newNamespace_A")
@@ -31,13 +33,21 @@ public record NamespaceCouple(String oldNamespace, String newOrSameNamespace) {
      *      List.of("oldNamespace_A", "oldNamespace_B"),
      *      List.of("newNamespace_A", "newNamespace_B", "newNamespace_C")
      *
-     *      // Caps is used as example, don't use it or the pack won't load!
+     *      // Caps is used as example, don't use it, will get replaced with lowercase anyway.
      *     }
      * </pre>
      * </p>
      * @param oldNamespaces A list of the old namespaces.
      * @param newNamespaces A list of the new namespaces. Remember to match the namespaces order of the previous list, or you'll get namespaces
      *                      that don't match expectations.
+     *                      <pre>
+     *                      {@code
+     *                      // Example of unmatched namespaces:
+     *                      List.of("oldNamespace_A", "oldNamespace_B"),
+     *                      List.of("newNamespace_B", "newNamespace_A")
+     *                      // It works, but it's not what you expect.
+     *                      }
+     *                      </pre>
      * @return The {@link List} of namespaces couples.
      * @throws IllegalArgumentException If the lists are different in dimension.
      */
