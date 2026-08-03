@@ -8,11 +8,11 @@ import java.util.List;
  * Used to create a couple of namespaces that need to be changed.
  *
  * @param oldNamespace The old namespace occurring in the resourcepack files.
- * @param newNamespace The new namespace that will replace the old one; also the name of the directory
- *                     inside the {@code assets} folder containing all the files (blockstates, models...).
+ * @param newOrSameNamespace The new namespace that will replace the old one; also the name of the directory
+ *                     inside the {@code assets} folder containing all the files (blockstates, models...). Can be the same as the old one.
  */
 @ParametersAreNonnullByDefault
-public record NamespaceCouple(String oldNamespace, String newNamespace) {
+public record NamespaceCouple(String oldNamespace, String newOrSameNamespace) {
     /**
      * Creates a list of multiple {@link NamespaceCouple}.
      * <p>
