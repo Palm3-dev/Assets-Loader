@@ -6,6 +6,7 @@ import java.util.List;
 
 /**
  * Used to create a couple of namespaces that need to be changed.
+ * <br><b>IMPORTANT:</b> remember to not use uppercase letters, accepted chars are: [a-z0-9_.-]
  *
  * @param oldNamespace The old namespace occurring in the resourcepack files.
  * @param newOrSameNamespace The new namespace that will replace the old one; also the name of the directory
@@ -14,7 +15,7 @@ import java.util.List;
 @ParametersAreNonnullByDefault
 public record NamespaceCouple(String oldNamespace, String newOrSameNamespace) {
     /**
-     * Creates a list of multiple {@link NamespaceCouple}.
+     * Creates a list of multiple {@link NamespaceCouple}. Uppercase will be replaced with lowercase.
      * <p>
      * <b>NOTE:</b> Pay attention while using this method.
      * The general order you put the namespaces in the lists is not important; what is important is that you
@@ -29,6 +30,8 @@ public record NamespaceCouple(String oldNamespace, String newOrSameNamespace) {
      *      // Wrong, will throw an IllegalArgumentException.
      *      List.of("oldNamespace_A", "oldNamespace_B"),
      *      List.of("newNamespace_A", "newNamespace_B", "newNamespace_C")
+     *
+     *      // Caps is used as example, don't use it or the pack won't load!
      *     }
      * </pre>
      * </p>
@@ -48,28 +51,28 @@ public record NamespaceCouple(String oldNamespace, String newOrSameNamespace) {
         int newIndex = 0;
         List<NamespaceCouple> namespacesCouples = new ArrayList<>();
         for (String oldNamespace : oldNamespaces) {
-            namespacesCouples.add(new NamespaceCouple(oldNamespace, newNamespaces.get(newIndex)));
+            namespacesCouples.add(new NamespaceCouple(oldNamespace.toLowerCase(), newNamespaces.get(newIndex).toLowerCase()));
             newIndex++;
         }
         return namespacesCouples;
     }
 
     /**
-     * Creates a list of one {@link NamespaceCouple}.
+     * Creates a list of one {@link NamespaceCouple}. Uppercase will be replaced with lowercase.
      * @param oldNamespace The old namespace.
      * @param newNamespace The new namespace.
      * @return The {@link List} of namespace couple.
      */
     public static List<NamespaceCouple> createSingleCoupleList(String oldNamespace, String newNamespace) {
-        return List.of(new NamespaceCouple(oldNamespace, newNamespace));
+        return List.of(new NamespaceCouple(oldNamespace.toLowerCase(), newNamespace.toLowerCase()));
     }
 
     /**
-     * Creates a list of one {@link NamespaceCouple} that contains the same old and new namespaces.
+     * Creates a list of one {@link NamespaceCouple} that contains the same old and new namespaces. Uppercase will be replaced with lowercase.
      * @param namespace The namespace, old and new one.
      * @return The {@link List} of namespace couple.
      */
     public static List<NamespaceCouple> createSingleCoupleList(String namespace) {
-        return List.of(new NamespaceCouple(namespace, namespace));
+        return List.of(new NamespaceCouple(namespace.toLowerCase(), namespace.toLowerCase()));
     }
 }
