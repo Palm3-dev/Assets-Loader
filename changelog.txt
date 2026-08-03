@@ -1,0 +1,12 @@
+====== CHANGES ======
+NamespaceCouple:
+    - Added same namespace single couple list creation.
+    - Remove unnecessary throws from methods.
+
+AssetLoader:
+    - Completely removed static subclasses Single/Multiple
+    - Added string directory getter method (as path)
+    - added simple pack loader method
+
+====== ADDITIONS ======
+- JarLoadingInfos added to remove some params from loader methods.

@@ -2,7 +2,9 @@ package com.palm3.assets_loader.assets;
 
 import com.mojang.logging.LogUtils;
 import com.palm3.assets_loader.PrettyLogging;
+import com.palm3.assets_loader.assets.patchers.AssetType;
 import com.palm3.assets_loader.assets.patchers.AssetsFilesNamespaceChanger;
+import com.palm3.assets_loader.assets.patchers.ModelsChanger;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.packs.*;
 import net.minecraft.server.packs.repository.*;
@@ -67,49 +69,45 @@ public class AssetsLoader {
     }
 
 
+    //todo add atomic boolean to know if icon copied
     public static class Loaders {
-        public static void loadSingleMultiJar(AssetsLoader assetsLoader, JarLoadingInfos jarLoadingInfos, ResourcePackInfos packInfos) {
-            jarLoadingInfos.namespaceCouplesByJarFile.forEach((modJarFile, namespaceCouples) -> {
+        public static void loadSinglePackMultiJarMultiNamespace(AddPackFindersEvent event, PackLoadingContext context) {
+            AssetsLoader assetsLoader = context.assetsLoader();
+            JarLoadingInfos jarLoadingInfos = context.jarLoadingInfos();
+            ResourcePackInfos packInfos = context.packInfos();
+            Path packPath = assetsLoader.tempDirectoryPath.resolve(packInfos.packFolderName());
 
+            jarLoadingInfos.namespaceCouplesByJarFile.forEach((modJarFile, namespaceCouples) -> {
+                Path jarFilePath = MOD_DIR.resolve(modJarFile);
+                for (NamespaceCouple namespaceCouple : namespaceCouples) {
+                    Path assetsDestinationPath = packPath.resolve("assets").resolve(namespaceCouple.newOrSameNamespace());
+
+                    if (!context.distinguishEventFireTime() || assetsLoader.initialPackLoad) {
+                        PL.logI("Starting loading process for mod: " + assetsLoader.loaderModName + ", jar namespace: " + namespaceCouple.oldNamespace() + " ->");
+                        copyAssetsFromJar(jarFilePath, assetsDestinationPath, namespaceCouple.oldNamespace(), jarLoadingInfos.forceCopyAssets, jarLoadingInfos.logCopyOption);
+                        if (jarLoadingInfos.jarIconFile.iconJarFile().equals(modJarFile))
+                            copyJarIcon(jarFilePath, jarLoadingInfos.jarIconFile.iconFileName(), packPath, "pack");
+                    }
+
+                    if (jarLoadingInfos.oldObjLoader != null)
+                        ModelsChanger.createNew(packPath, namespaceCouple.newOrSameNamespace(), jarLoadingInfos.oldObjLoader).changeModelsObjLoader(AssetType.ALL_MODELS);
+                }
             });
 
+            AssetsFilesNamespaceChanger.multipleNamespaces(packPath, jarLoadingInfos.getNonIndexedNamespaceCouplesList()).changeAll();
 
+            PL.logI("Adding resourcepack with internal id '" + packInfos.packFolderName() + "' to game packs.");
+            event.addRepositorySource(packRepositorySource(packInfos.packFolderName(), packInfos.packTitle(), packInfos.packDescription(), packPath, packInfos.requiredPack()));
 
-            /*
-            for (NamespaceCouple namespaceCouple : namespaceCouples) {
-                try {
-                    Path jarFilePath = MOD_DIR.resolve(modJarFile);
-                    Path packPath = getDirectoryPath(assetsLoader.tempDirectory, assetsLoader.tempDirIsHidden).resolve(packInfos.packFolderName());
-                    Path assetsDestinationPath = packPath.resolve("assets").resolve(namespaceCouple.newNamespace());
-
-                    if (!distinguishEventFireTime || assetsLoader.initialPackLoad) {
-                        PL.logI("Starting loading process for mod: " + assetsLoader.loaderModName + ", jar namespace: " + namespaceCouple.oldNamespace() + " ->");
-                        copyAssetsFromJar(jarFilePath, assetsDestinationPath, namespaceCouple.oldNamespace(), forceCopy, logCopyOption);
-                        copyJarIcon(jarFilePath, iconFileName, packPath, "pack");
-                        AssetsFilesNamespaceChanger.singleNamespace(packPath, namespaceCouple.oldNamespace(), namespaceCouple.newNamespace()).changeAll();
-                        if (modelsOldLoader != null) {
-                            ModelsChanger.createNew(packPath, namespaceCouple.newNamespace(), modelsOldLoader);
-                        }
-                        assetsLoader.initialPackLoad = false;  // Not initial load anymore, for next calls.
-                    }
-
-                    event.addRepositorySource(packRepositorySource(packInfos.packFolderName(), packInfos.packTitle(), packInfos.packDescription(), packPath, packInfos.requiredPack()));
-
-                    if (packInfos.deletePack()) {
-                        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                            deleteDirectory(assetsLoader.tempDirectory + File.separator + packInfos.packFolderName(), true, assetsLoader.tempDirIsHidden);
-                        }));
-                    }
-                } catch (IOException e) {
-                    throw new NoSuchFileException("The directory '" + getDirectoryPath(assetsLoader.tempDirectory, assetsLoader.tempDirIsHidden) + "' doesn't exist in the game folder.");
-                }
-            }*/
+            if (packInfos.deletePack()) {
+                Runtime.getRuntime().addShutdownHook(new Thread(() -> deleteDirectory(assetsLoader.tempDirectory, false, assetsLoader.tempDirIsHidden)));
+            }
         }
 
         /**
          * Loads one mod jar assets to a resourcepack. Creates the temporary directory if it doesn't exist.
          * @deprecated  This method is exposed if you want to use it for specific cases, but its usage is not recommended.
-         * Use the other loaders instead, or create your own custom method.
+         * Use the other loaders instead, or create your own custom method with the provided methods in {@link AssetsLoader}.
          * @param event The add pack finders event.
          * @param tempDirectory The temporary directory that will contain the resourcepack.
          * @param hidden If the temporary directory is hidden.
@@ -157,7 +155,6 @@ public class AssetsLoader {
 
 
     //================== STATICS =====================
-    private static void keepFuckingJavadocRenderedCauseItTriggersToSeeItNotRenderedBtwIfThereAreSettingsToChangeItIDontHaveTimeAndWillToFindThem() {}
     /**
      * Creates a directory inside the game folder {@code .minecraft}.
      * @param directory The directory you want to create, can also be a path.
