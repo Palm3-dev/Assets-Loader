@@ -1,5 +1,7 @@
 package com.palm3.assets_loader.assets;
 
+import org.jetbrains.annotations.NotNull;
+
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
 import java.util.List;
@@ -84,5 +86,10 @@ public record NamespaceCouple(String oldNamespace, String newOrSameNamespace) {
      */
     public static List<NamespaceCouple> createSingleCoupleList(String namespace) {
         return List.of(new NamespaceCouple(namespace.toLowerCase(), namespace.toLowerCase()));
+    }
+
+    @Override
+    public @NotNull String toString() {
+        return "OLD: " + oldNamespace + " | NEW: " + newOrSameNamespace;
     }
 }
