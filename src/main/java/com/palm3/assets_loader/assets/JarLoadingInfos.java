@@ -88,7 +88,7 @@ public record JarLoadingInfos(LinkedHashMap<String, List<NamespaceCouple>> names
      *                                  List.of(  // List of couples for jar 1.
      *                                      new NamespaceCouple("oldNamespace_A_jar_1", "newNamespace_A_jar_1"),
      *                                      new NamespaceCouple("oldNamespace_B_jar_1", "newNamespace_B_jar_1")
-     *                             ),
+     *                                  ),
      *                                  List.of(  // List of couples for jar 2.
      *                                      new NamespaceCouple("oldNamespace_A_jar_2", "newNamespace_A_jar_2"),
      *                                      new NamespaceCouple("oldNamespace_B_jar_2", "newNamespace_B_jar_2")
@@ -105,7 +105,7 @@ public record JarLoadingInfos(LinkedHashMap<String, List<NamespaceCouple>> names
      *                                  List.of(  // List of couples for jar 1.
      *                                      new NamespaceCouple("oldNamespace_A_jar_1", "newNamespace_A_jar_2"),  // Unmatching
      *                                      new NamespaceCouple("oldNamespace_B_jar_1", "newNamespace_B_jar_1")
-     *                             ),
+     *                                  ),
      *                                  List.of(  // List of couples for jar 2.
      *                                      new NamespaceCouple("oldNamespace_A_jar_2", "newNamespace_A_jar_1"),  // Unmatching
      *                                      new NamespaceCouple("oldNamespace_B_jar_2", "newNamespace_B_jar_2")
