@@ -92,4 +92,22 @@ public record NamespaceCouple(String oldNamespace, String newOrSameNamespace) {
     public @NotNull String toString() {
         return "OLD: " + oldNamespace + " | NEW: " + newOrSameNamespace;
     }
+
+    /**
+     * Used to confront the new namespace values.
+     * @param namespaceCouple The namespace couple to confront this one to.
+     * @return {@code true} if the new namespaces match.
+     */
+    public boolean sameNewOf(NamespaceCouple namespaceCouple) {
+        return namespaceCouple.newOrSameNamespace.equals(newOrSameNamespace);
+    }
+
+    /**
+     * Used to confront the old namespace values.
+     * @param namespaceCouple The namespace couple to confront this one to.
+     * @return {@code true} if the old namespaces match.
+     */
+    public boolean sameOldOf(NamespaceCouple namespaceCouple) {
+        return namespaceCouple.oldNamespace.equals(oldNamespace);
+    }
 }

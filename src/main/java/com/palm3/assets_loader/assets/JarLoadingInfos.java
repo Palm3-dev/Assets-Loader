@@ -6,9 +6,7 @@ import com.palm3.assets_loader.PrettyLogging;
 import com.palm3.assets_loader.assets.patchers.ModelsChanger;
 
 import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -48,14 +46,32 @@ public record JarLoadingInfos(LinkedHashMap<String, List<NamespaceCouple>> names
 
     /**
      * Used to get all the namespace couples in the record.
-     * <br>It's non-indexed since all the couples are not assigned their jar file, the methods returns a simple list of all the couples.
+     * <br>It's non-indexed since all the couples are not assigned to their jar file, the methods returns a simple list of all the couples from all jars.
+     * @param logSimilar If similar couples should be logged. Logs similar old, new and both namespaces.
      * @return A {@link List} of {@link NamespaceCouple}.
      */
-    public List<NamespaceCouple> getNonIndexedNamespaceCouplesList() {
+    public List<NamespaceCouple> getNonIndexedNamespaceCouplesList(boolean logSimilar) {
         List<NamespaceCouple> allNamespaceCouples = new ArrayList<>();
         namespaceCouplesByJarFile.forEach((modJarFile, namespaceCouples) -> {
             allNamespaceCouples.addAll(namespaceCouples);
         });
+
+        if (logSimilar) {
+            int size = allNamespaceCouples.size();
+            for (int i = 0; i < size; i++) {
+                NamespaceCouple namespaceCouple = allNamespaceCouples.get(i);
+                for (int j = i + 1; j < size; j++) {
+                    NamespaceCouple namespaceCouple1 = allNamespaceCouples.get(j);
+                    if (namespaceCouple1.sameNewOf(namespaceCouple))
+                        PL.logW("Namespace couple {" + namespaceCouple1 + "} has same NEW_NAMESPACE as {" + namespaceCouple + "}");
+                    if (namespaceCouple1.sameOldOf(namespaceCouple))
+                        PL.logW("Namespace couple {" + namespaceCouple1 + "} has same OLD_NAMESPACE as {" + namespaceCouple + "}");
+                    if (namespaceCouple1.equals(namespaceCouple))
+                        PL.logW("Namespace couple {" + namespaceCouple1 + "} IS THE SAME as {" + namespaceCouple + "}");
+                }
+            }
+        }
+
         return allNamespaceCouples;
     }
 
