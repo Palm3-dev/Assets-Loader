@@ -38,7 +38,7 @@ public record NamespaceCouple(String oldNamespace, String newNamespace) {
      * @return The {@link List} of namespaces couples.
      * @throws IllegalArgumentException If the lists are different in dimension.
      */
-    public static List<NamespaceCouple> createMultipleNamespacesList(List<String> oldNamespaces, List<String> newNamespaces) {
+    public static List<NamespaceCouple> createMultipleCouplesList(List<String> oldNamespaces, List<String> newNamespaces) {
         // Check lists or throw
         if (oldNamespaces.size() != newNamespaces.size()) {
             String biggerList = oldNamespaces.size() > newNamespaces.size() ? "old_namespaces" : "new_namespaces";
@@ -58,11 +58,18 @@ public record NamespaceCouple(String oldNamespace, String newNamespace) {
      * Creates a list of one {@link NamespaceCouple}.
      * @param oldNamespace The old namespace.
      * @param newNamespace The new namespace.
-     * @return The {@link List} of namespaces couples.
+     * @return The {@link List} of namespace couple.
      */
-    public static List<NamespaceCouple> createSingleNamespacesList(String oldNamespace, String newNamespace) {
-        List<NamespaceCouple> namespacesCouples = new ArrayList<>();
-        namespacesCouples.add(new NamespaceCouple(oldNamespace, newNamespace));
-        return namespacesCouples;
+    public static List<NamespaceCouple> createSingleCoupleList(String oldNamespace, String newNamespace) {
+        return List.of(new NamespaceCouple(oldNamespace, newNamespace));
+    }
+
+    /**
+     * Creates a list of one {@link NamespaceCouple} that contains the same old and new namespaces.
+     * @param namespace The namespace, old and new one.
+     * @return The {@link List} of namespace couple.
+     */
+    public static List<NamespaceCouple> createSingleCoupleList(String namespace) {
+        return List.of(new NamespaceCouple(namespace, namespace));
     }
 }
