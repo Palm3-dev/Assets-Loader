@@ -76,33 +76,6 @@ public record JarLoadingInfos(LinkedHashMap<String, List<NamespaceCouple>> names
     }
 
     /**
-     * Creates a list of mod jar files as strings.
-     * @param modJarFile The first obligatory jar file.
-     * @param others Other jar files.
-     * @return A {@link List} of mod jar files as {@link String}.
-     */
-    public static List<String> createModJarFilesList(String modJarFile, String... others) {
-        List<String> modJarFiles = new ArrayList<>();
-        modJarFiles.add(modJarFile);
-        modJarFiles.addAll(Arrays.asList(others));
-        return modJarFiles;
-    }
-
-    /**
-     * Creates a list for every jar file, containing a list of namespace couples.
-     * @param namespaceCouples The first obligatory namespace couples list.
-     * @param others Other lists.
-     * @return A {@link List} of multiple {@link NamespaceCouple}s.
-     */
-    @SafeVarargs
-    public static List<List<NamespaceCouple>> createNamespaceCouplesList(List<NamespaceCouple> namespaceCouples, List<NamespaceCouple>... others) {
-        List<List<NamespaceCouple>> namespaceCouplesList = new ArrayList<>();
-        namespaceCouplesList.add(namespaceCouples);
-        namespaceCouplesList.addAll(Arrays.asList(others));
-        return namespaceCouplesList;
-    }
-
-    /**
      * Creates a map of mod jar files and the namespace couples for those files.
      * @param modJarFiles A list of mod jar files as {@link String}.
      * @param namespaceCouplesList A list of namespace couples, for every jar file.
