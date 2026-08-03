@@ -3,7 +3,6 @@ package com.palm3.assets_loader.assets;
 import com.mojang.logging.LogUtils;
 import com.palm3.assets_loader.PrettyLogging;
 import com.palm3.assets_loader.assets.patchers.AssetsFilesNamespaceChanger;
-import com.palm3.assets_loader.assets.patchers.ModelsChanger;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.packs.*;
 import net.minecraft.server.packs.repository.*;
@@ -46,6 +45,7 @@ public class AssetsLoader {
     }
 
     private final String tempDirectory;
+    private final Path tempDirectoryPath;
     private final boolean tempDirIsHidden;
     private final String loaderModName;  // Mod name?
     protected boolean initialPackLoad = true;  // Used to know if the AddPackFinders event is called from the mod lifecycle (mod are being loaded) or from minecraft packs reload.
@@ -63,20 +63,14 @@ public class AssetsLoader {
         this.tempDirectory = tempDirectory;
         this.tempDirIsHidden = hidden;
         this.loaderModName = mod_id;
-        createDirectory(this.tempDirectory, tempDirIsHidden);
+        this.tempDirectoryPath = createDirectoryAndGetPath(this.tempDirectory, tempDirIsHidden);
     }
 
 
     public static class Loaders {
         public static void loadSingleMultiJar(AssetsLoader assetsLoader, JarLoadingInfos jarLoadingInfos, ResourcePackInfos packInfos) {
             jarLoadingInfos.namespaceCouplesByJarFile.forEach((modJarFile, namespaceCouples) -> {
-                try {
-                    Path jarFilePath = MOD_DIR.resolve(modJarFile);
-                    Path packPath = getDirectoryPath(assetsLoader.tempDirectory, assetsLoader.tempDirIsHidden).resolve(packInfos.packFolderName());
-                    Path assetsDestinationPath =
-                } catch (IOException e) {
-                    throw new NoSuchFileException("The directory '" + getDirectoryPath(assetsLoader.tempDirectory, assetsLoader.tempDirIsHidden) + "' doesn't exist in the game folder.");
-                }
+
             });
 
 
@@ -132,29 +126,26 @@ public class AssetsLoader {
         public static void loadPackFromJar(AddPackFindersEvent event, String tempDirectory, boolean hidden, String modJarFile, String jarAssetsNamespace, @Nullable String newNamespace,
                                            String iconFileName, ResourcePackInfos packInfos, boolean forceCopy, LogCopyOption logCopyOption) throws NoSuchFileException {
             modJarFile = modJarFile.endsWith(".jar") ? modJarFile : modJarFile + ".jar";
-            createDirectory(tempDirectory, hidden);
-            try {
-                Path jarFilePath = MOD_DIR.resolve(modJarFile);
-                Path packPath = getDirectoryPath(tempDirectory, hidden).resolve(packInfos.packFolderName());
-                Path assetsDestinationPath = packPath.resolve("assets").resolve(newNamespace == null ? jarAssetsNamespace : newNamespace);
+            createDirectoryAndGetPath(tempDirectory, hidden);
 
-                PL.logI("Starting assets loading process ->");
-                copyAssetsFromJar(jarFilePath, assetsDestinationPath, jarAssetsNamespace, forceCopy, logCopyOption);
-                copyJarIcon(jarFilePath, iconFileName, packPath, "pack");
+            Path jarFilePath = MOD_DIR.resolve(modJarFile);
+            Path packPath = createDirectoryAndGetPath(tempDirectory, hidden).resolve(packInfos.packFolderName());
+            Path assetsDestinationPath = packPath.resolve("assets").resolve(newNamespace == null ? jarAssetsNamespace : newNamespace);
 
-                if (newNamespace != null && !newNamespace.equals(jarAssetsNamespace)) {
-                    AssetsFilesNamespaceChanger.singleNamespace(packPath, jarAssetsNamespace, newNamespace).changeAll();
-                }
+            PL.logI("Starting assets loading process ->");
+            copyAssetsFromJar(jarFilePath, assetsDestinationPath, jarAssetsNamespace, forceCopy, logCopyOption);
+            copyJarIcon(jarFilePath, iconFileName, packPath, "pack");
 
-                event.addRepositorySource(packRepositorySource(packInfos.packFolderName(), packInfos.packTitle(), packInfos.packDescription(), packPath, packInfos.requiredPack()));
+            if (newNamespace != null && !newNamespace.equals(jarAssetsNamespace)) {
+                AssetsFilesNamespaceChanger.singleNamespace(packPath, jarAssetsNamespace, newNamespace).changeAll();
+            }
 
-                if (packInfos.deletePack()) {
-                    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                        deleteDirectory(tempDirectory + File.separator + packInfos.packFolderName(), true, hidden);
-                    }));
-                }
-            } catch (IOException e) {
-                throw new NoSuchFileException("The directory '" + getDirectoryPath(tempDirectory, hidden) + "' doesn't exist in the game folder.");
+            event.addRepositorySource(packRepositorySource(packInfos.packFolderName(), packInfos.packTitle(), packInfos.packDescription(), packPath, packInfos.requiredPack()));
+
+            if (packInfos.deletePack()) {
+                Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                    deleteDirectory(tempDirectory + File.separator + packInfos.packFolderName(), true, hidden);
+                }));
             }
         }
     }
@@ -175,7 +166,7 @@ public class AssetsLoader {
      *               <br>If you're using a path, only the first (highest) directory of the path will be hidden.
      *               <br>E.g. in {@code assets/temp} only the {@code assets} directory will be hidden (and also named {@code .assets}).
      */
-    public static void createDirectory(String directory, boolean hidden) {
+    public static Path createDirectoryAndGetPath(String directory, boolean hidden) {
         if (directory.contains(".")) directory = directory.replace(".", "");
         Path dir = hidden ? GAME_DIR.resolve("." + directory) : GAME_DIR.resolve(directory);
 
@@ -200,25 +191,7 @@ public class AssetsLoader {
         } else {
             PL.logI("Directory '" + directory + "' already present in game folder...");
         }
-    }
-
-    /**
-     * Returns a directory inside the game folder {@code .minecraft} as {@link Path}.
-     * @param directory The directory you want to get, can also be a path.
-     *                  E.g. {@code assets/temp}. Don't insert points in the path/folder name, they will get deleted.
-     * @param hidden If the directory is hidden.
-     * @return The given string directory as {@link Path}.
-     * @throws NoSuchFileException If the requested directory as path doesn't exist.
-     */
-    public static Path getDirectoryPath(String directory, boolean hidden) throws NoSuchFileException {
-        if (directory.contains(".")) directory = directory.replace(".", "");
-        Path dir = hidden ? GAME_DIR.resolve("." + directory) : GAME_DIR.resolve(directory);
-
-        if (Files.exists(dir)) {
-            return dir;
-        } else {
-            throw new NoSuchFileException("Directory '" + directory + "' you're trying to get as Path doesn't exist in game folder.");
-        }
+        return dir;
     }
 
     /**
