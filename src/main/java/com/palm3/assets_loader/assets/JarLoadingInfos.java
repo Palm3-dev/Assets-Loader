@@ -47,7 +47,7 @@ public record JarLoadingInfos(LinkedHashMap<String, List<NamespaceCouple>> names
     /**
      * Used to get all the namespace couples in the record.
      * <br><b>NOTE:</b> It's non-indexed since all the couples are not assigned to their jar file, the method returns a simple list of all the couples from all jars.
-     * @param logSimilar If similar couples should be logged. Logs similar old, new and both namespaces.
+     * @param logSimilar If similar couples should be logged. Logs if the couple has similar old, new or both namespaces.
      * @return A {@link List} of {@link NamespaceCouple}.
      */
     public List<NamespaceCouple> getNonIndexedNamespaceCouplesList(boolean logSimilar) {
