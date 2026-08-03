@@ -3,6 +3,7 @@ package com.palm3.assets_loader.assets;
 import com.mojang.logging.LogUtils;
 import com.palm3.assets_loader.PrettyLogging;
 import com.palm3.assets_loader.assets.patchers.AssetsFilesNamespaceChanger;
+import com.palm3.assets_loader.assets.patchers.ModelsChanger;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.packs.*;
 import net.minecraft.server.packs.repository.*;
@@ -16,9 +17,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.*;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
@@ -26,7 +25,6 @@ import java.util.stream.Stream;
 import static com.palm3.assets_loader.LoaderMain.*;
 import static com.palm3.assets_loader.PrettyLogging.*;
 
-//todo update here, add comments
 /**
  * {@link AssetsLoader} is used to load Minecraft mods assets that cannot be used and published directly from your mod.
  * This class is used to extract those assets from a normally downloaded mod {@code .jar} file and use them in-game, with some other features.
@@ -38,16 +36,130 @@ public class AssetsLoader {
     private static final Path GAME_DIR = FMLPaths.GAMEDIR.get();
     private static final Path MOD_DIR = FMLPaths.MODSDIR.get();
 
-
-
-    private void logModInfo() {
+    // Logs this mod info
+    private void logLoaderInfo() {
         PL.logLineI(false);
         PL.logCenteredI("External assets loader by Palm3", DEF_EMPTY_LINE, true, true);
         PL.logCenteredI("Loads assets in-game directly from a mod jar", DEF_EMPTY_LINE, true, true);
         PL.logCenteredI("Mod version: " + MOD_VERSION + "    Discord: " + DISCORD_LINK, DEF_EMPTY_LINE, true, true);
         PL.logI(PL.line1);
-        PL.logI("Starting loading process -->");
     }
+
+    private final String tempDirectory;
+    private final boolean tempDirIsHidden;
+    private final String loaderModName;  // Mod name?
+    protected boolean initialPackLoad = true;  // Used to know if the AddPackFinders event is called from the mod lifecycle (mod are being loaded) or from minecraft packs reload.
+
+    /**
+     * Used to create an instance of {@link AssetsLoader}. The class should be something like this:
+     * <pre>{@code public static final AssetsLoader LOADER =  AssetsLoader.newAssetLoader(".temp_assets", true, Main.MOD_ID);}</pre>
+     * <br><b>IMPORTANT:</b> only one instance of this class should be created for your mod, unless you have specific requirements, obviously.
+     * @param tempDirectory The temporary directory where all the loading processes and loading files will happen.
+     * @param hidden If the temporary directory should be hidden.
+     * @param mod_id The mod id of <b>your</b> mod.
+     */
+    public AssetsLoader(String tempDirectory, boolean hidden, String mod_id) {
+        logLoaderInfo();
+        this.tempDirectory = tempDirectory;
+        this.tempDirIsHidden = hidden;
+        this.loaderModName = mod_id;
+        createDirectory(this.tempDirectory, tempDirIsHidden);
+    }
+
+
+    public static class Loaders {
+        public static void loadSingleMultiJar(AssetsLoader assetsLoader, JarLoadingInfos jarLoadingInfos, ResourcePackInfos packInfos) {
+            jarLoadingInfos.namespaceCouplesByJarFile.forEach((modJarFile, namespaceCouples) -> {
+                try {
+                    Path jarFilePath = MOD_DIR.resolve(modJarFile);
+                    Path packPath = getDirectoryPath(assetsLoader.tempDirectory, assetsLoader.tempDirIsHidden).resolve(packInfos.packFolderName());
+                    Path assetsDestinationPath =
+                } catch (IOException e) {
+                    throw new NoSuchFileException("The directory '" + getDirectoryPath(assetsLoader.tempDirectory, assetsLoader.tempDirIsHidden) + "' doesn't exist in the game folder.");
+                }
+            });
+
+
+
+            /*
+            for (NamespaceCouple namespaceCouple : namespaceCouples) {
+                try {
+                    Path jarFilePath = MOD_DIR.resolve(modJarFile);
+                    Path packPath = getDirectoryPath(assetsLoader.tempDirectory, assetsLoader.tempDirIsHidden).resolve(packInfos.packFolderName());
+                    Path assetsDestinationPath = packPath.resolve("assets").resolve(namespaceCouple.newNamespace());
+
+                    if (!distinguishEventFireTime || assetsLoader.initialPackLoad) {
+                        PL.logI("Starting loading process for mod: " + assetsLoader.loaderModName + ", jar namespace: " + namespaceCouple.oldNamespace() + " ->");
+                        copyAssetsFromJar(jarFilePath, assetsDestinationPath, namespaceCouple.oldNamespace(), forceCopy, logCopyOption);
+                        copyJarIcon(jarFilePath, iconFileName, packPath, "pack");
+                        AssetsFilesNamespaceChanger.singleNamespace(packPath, namespaceCouple.oldNamespace(), namespaceCouple.newNamespace()).changeAll();
+                        if (modelsOldLoader != null) {
+                            ModelsChanger.createNew(packPath, namespaceCouple.newNamespace(), modelsOldLoader);
+                        }
+                        assetsLoader.initialPackLoad = false;  // Not initial load anymore, for next calls.
+                    }
+
+                    event.addRepositorySource(packRepositorySource(packInfos.packFolderName(), packInfos.packTitle(), packInfos.packDescription(), packPath, packInfos.requiredPack()));
+
+                    if (packInfos.deletePack()) {
+                        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                            deleteDirectory(assetsLoader.tempDirectory + File.separator + packInfos.packFolderName(), true, assetsLoader.tempDirIsHidden);
+                        }));
+                    }
+                } catch (IOException e) {
+                    throw new NoSuchFileException("The directory '" + getDirectoryPath(assetsLoader.tempDirectory, assetsLoader.tempDirIsHidden) + "' doesn't exist in the game folder.");
+                }
+            }*/
+        }
+
+        /**
+         * Loads one mod jar assets to a resourcepack. Creates the temporary directory if it doesn't exist.
+         * @deprecated  This method is exposed if you want to use it for specific cases, but its usage is not recommended.
+         * Use the other loaders instead, or create your own custom method.
+         * @param event The add pack finders event.
+         * @param tempDirectory The temporary directory that will contain the resourcepack.
+         * @param hidden If the temporary directory is hidden.
+         * @param modJarFile The mod jar file name, including the {@code .jar} extension.
+         * @param jarAssetsNamespace The namespace you want to copy.
+         * @param newNamespace The new namespace, set to null to keep the old one.
+         * @param iconFileName The name of the jar icon file.
+         * @param packInfos An instance of {@link ResourcePackInfos}.
+         * @param forceCopy If the copy of the fle should be forced, replacing the existent ones.
+         * @param logCopyOption Defines the type of copy logs.
+         * @throws NoSuchFileException If the temp directory doesn't exist (should never happen).
+         */
+        @Deprecated
+        public static void loadPackFromJar(AddPackFindersEvent event, String tempDirectory, boolean hidden, String modJarFile, String jarAssetsNamespace, @Nullable String newNamespace,
+                                           String iconFileName, ResourcePackInfos packInfos, boolean forceCopy, LogCopyOption logCopyOption) throws NoSuchFileException {
+            modJarFile = modJarFile.endsWith(".jar") ? modJarFile : modJarFile + ".jar";
+            createDirectory(tempDirectory, hidden);
+            try {
+                Path jarFilePath = MOD_DIR.resolve(modJarFile);
+                Path packPath = getDirectoryPath(tempDirectory, hidden).resolve(packInfos.packFolderName());
+                Path assetsDestinationPath = packPath.resolve("assets").resolve(newNamespace == null ? jarAssetsNamespace : newNamespace);
+
+                PL.logI("Starting assets loading process ->");
+                copyAssetsFromJar(jarFilePath, assetsDestinationPath, jarAssetsNamespace, forceCopy, logCopyOption);
+                copyJarIcon(jarFilePath, iconFileName, packPath, "pack");
+
+                if (newNamespace != null && !newNamespace.equals(jarAssetsNamespace)) {
+                    AssetsFilesNamespaceChanger.singleNamespace(packPath, jarAssetsNamespace, newNamespace).changeAll();
+                }
+
+                event.addRepositorySource(packRepositorySource(packInfos.packFolderName(), packInfos.packTitle(), packInfos.packDescription(), packPath, packInfos.requiredPack()));
+
+                if (packInfos.deletePack()) {
+                    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                        deleteDirectory(tempDirectory + File.separator + packInfos.packFolderName(), true, hidden);
+                    }));
+                }
+            } catch (IOException e) {
+                throw new NoSuchFileException("The directory '" + getDirectoryPath(tempDirectory, hidden) + "' doesn't exist in the game folder.");
+            }
+        }
+    }
+
+
 
 
 
@@ -367,49 +479,6 @@ public class AssetsLoader {
             if (this == ALWAYS_LOG) return true;
             return this == LOG_NONEXISTENT && !Files.exists(copyTarget);
 
-        }
-    }
-
-    /**
-     * Loads one mod jar assets to a resourcepack. Creates the temporary directory if it doesn't exist.
-     * @param event The add pack finders event.
-     * @param tempDirectory The temporary directory that will contain the resourcepack.
-     * @param hidden If the temporary directory is hidden.
-     * @param modJarFile The mod jar file name, including the {@code .jar} extension.
-     * @param jarAssetsNamespace The namespace you want to copy.
-     * @param newNamespace The new namespace, set to null to keep the old one.
-     * @param iconFileName The name of the jar icon file.
-     * @param packInfos An instance of {@link ResourcePackInfos}.
-     * @param forceCopy If the copy of the fle should be forced, replacing the existent ones.
-     * @param logCopyOption Defines the type of copy logs.
-     * @throws NoSuchFileException If the temp directory doesn't exist (should never happen).
-     */
-    public static void loadPackFromJar(AddPackFindersEvent event, String tempDirectory, boolean hidden, String modJarFile, String jarAssetsNamespace, @Nullable String newNamespace,
-                                       String iconFileName, ResourcePackInfos packInfos, boolean forceCopy, LogCopyOption logCopyOption) throws NoSuchFileException {
-        modJarFile = modJarFile.endsWith(".jar") ? modJarFile : modJarFile + ".jar";
-        createDirectory(tempDirectory, hidden);
-        try {
-            Path jarFilePath = MOD_DIR.resolve(modJarFile);
-            Path packPath = getDirectoryPath(tempDirectory, hidden).resolve(packInfos.packFolderName());
-            Path assetsDestinationPath = packPath.resolve("assets").resolve(newNamespace == null ? jarAssetsNamespace : newNamespace);
-
-            PL.logI("Starting assets loading process ->");
-            copyAssetsFromJar(jarFilePath, assetsDestinationPath, jarAssetsNamespace, forceCopy, logCopyOption);
-            copyJarIcon(jarFilePath, iconFileName, packPath, "pack");
-
-            if (newNamespace != null && !newNamespace.equals(jarAssetsNamespace)) {
-                AssetsFilesNamespaceChanger.singleNamespace(packPath, jarAssetsNamespace, newNamespace).changeAll();
-            }
-
-            event.addRepositorySource(packRepositorySource(packInfos.packFolderName(), packInfos.packTitle(), packInfos.packDescription(), packPath, packInfos.requiredPack()));
-
-            if (packInfos.deletePack()) {
-                Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                    deleteDirectory(tempDirectory + File.separator + packInfos.packFolderName(), true, hidden);
-                }));
-            }
-        } catch (IOException e) {
-            throw new NoSuchFileException("The directory '" + getDirectoryPath(tempDirectory, hidden) + "' doesn't exist in the game folder.");
         }
     }
 
