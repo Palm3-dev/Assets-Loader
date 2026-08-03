@@ -46,7 +46,7 @@ public record JarLoadingInfos(LinkedHashMap<String, List<NamespaceCouple>> names
 
     /**
      * Used to get all the namespace couples in the record.
-     * <br>It's non-indexed since all the couples are not assigned to their jar file, the methods returns a simple list of all the couples from all jars.
+     * <br><b>NOTE:</b> It's non-indexed since all the couples are not assigned to their jar file, the method returns a simple list of all the couples from all jars.
      * @param logSimilar If similar couples should be logged. Logs similar old, new and both namespaces.
      * @return A {@link List} of {@link NamespaceCouple}.
      */
@@ -75,8 +75,93 @@ public record JarLoadingInfos(LinkedHashMap<String, List<NamespaceCouple>> names
         return allNamespaceCouples;
     }
 
-    //todo check cause idk if fine, can be better and add variations for single namespace
-    public static LinkedHashMap<String, List<NamespaceCouple>> createCouplesList(List<String> modJarFiles, List<List<NamespaceCouple>> namespaceCouplesList) {
+    /**
+     * Creates a list of mod jar files as strings.
+     * @param modJarFile The first obligatory jar file.
+     * @param others Other jar files.
+     * @return A {@link List} of mod jar files as {@link String}.
+     */
+    public static List<String> createModJarFilesList(String modJarFile, String... others) {
+        List<String> modJarFiles = new ArrayList<>();
+        modJarFiles.add(modJarFile);
+        modJarFiles.addAll(Arrays.asList(others));
+        return modJarFiles;
+    }
+
+    /**
+     * Creates a list for every jar file, containing a list of namespace couples.
+     * @param namespaceCouples The first obligatory namespace couples list.
+     * @param others Other lists.
+     * @return A {@link List} of multiple {@link NamespaceCouple}s.
+     */
+    @SafeVarargs
+    public static List<List<NamespaceCouple>> createNamespaceCouplesList(List<NamespaceCouple> namespaceCouples, List<NamespaceCouple>... others) {
+        List<List<NamespaceCouple>> namespaceCouplesList = new ArrayList<>();
+        namespaceCouplesList.add(namespaceCouples);
+        namespaceCouplesList.addAll(Arrays.asList(others));
+        return namespaceCouplesList;
+    }
+
+    /**
+     * Creates a map of mod jar files and the namespace couples for those files.
+     * @param modJarFiles A list of mod jar files as {@link String}.
+     * @param namespaceCouplesList A list of namespace couples, for every jar file.
+     *                             <br><b>Remember to keep the same namespaces order:</b>
+     *                             <pre>
+     *                             {@code
+     *                              // Example of correct list params:
+     *                              List.of("mod_jar_file_1.jar", "mod_jar_file_2.jar"),  // Mod jar files
+     *                              List.of(
+     *                                  List.of(  // List of couples for jar 1.
+     *                                      new NamespaceCouple("oldNamespace_A_jar_1", "newNamespace_A_jar_1"),
+     *                                      new NamespaceCouple("oldNamespace_B_jar_1", "newNamespace_B_jar_1")
+     *                             ),
+     *                                  List.of(  // List of couples for jar 2.
+     *                                      new NamespaceCouple("oldNamespace_A_jar_2", "newNamespace_A_jar_2"),
+     *                                      new NamespaceCouple("oldNamespace_B_jar_2", "newNamespace_B_jar_2")
+     *                                  )
+     *                              )
+     *                             }
+     *                             </pre>
+     *
+     *                             <pre>
+     *                             {@code
+     *                              // Example of unmatching list params:
+     *                              List.of("mod_jar_file_1.jar", "mod_jar_file_2.jar"),  // Mod jar files
+     *                              List.of(
+     *                                  List.of(  // List of couples for jar 1.
+     *                                      new NamespaceCouple("oldNamespace_A_jar_1", "newNamespace_A_jar_2"),  // Unmatching
+     *                                      new NamespaceCouple("oldNamespace_B_jar_1", "newNamespace_B_jar_1")
+     *                             ),
+     *                                  List.of(  // List of couples for jar 2.
+     *                                      new NamespaceCouple("oldNamespace_A_jar_2", "newNamespace_A_jar_1"),  // Unmatching
+     *                                      new NamespaceCouple("oldNamespace_B_jar_2", "newNamespace_B_jar_2")
+     *                                  )
+     *                              )
+     *
+     *                              // With this the pack will load, but you won't get what you expect. This is the first thing to check if you have unwanted namespaces.
+     *                             }
+     *                             </pre>
+     *
+     *                             <br><b>The sizes of the two main lists needs to be the same, or you'll get an {@link IllegalArgumentException}:</b>
+     *                             <pre>
+     *                             {@code
+     *                              // Incorrect:
+     *                              List.of("mod_jar_file_1.jar", "mod_jar_file_2.jar"),  // Contains two mod jar files
+     *                              List.of(  // Contains three lists.
+     *                                  List.of(...),
+     *                                  List.of(...),
+     *                                  List.of(...)
+     *                              )
+     *                             }
+     *                             </pre>
+     * @return A {@link LinkedHashMap} with keys the mod jar files and with values the {@link List}s of {@link NamespaceCouple}s.
+     */
+    public static LinkedHashMap<String, List<NamespaceCouple>> createJarNamespacesMap(List<String> modJarFiles, List<List<NamespaceCouple>> namespaceCouplesList) {
+        if (modJarFiles.size() != namespaceCouplesList.size()) {
+            String biggerList = modJarFiles.size() > namespaceCouplesList.size() ? "mod_jar_files" : "namespace_couples_list";
+            throw new IllegalArgumentException("The given lists need to be the same size! Bigger list: " + biggerList);
+        }
         LinkedHashMap<String, List<NamespaceCouple>> namespaceCouples = new LinkedHashMap<>();
         AtomicInteger couplesIndex = new AtomicInteger();
         modJarFiles.forEach(modJarFile -> namespaceCouples.put(modJarFile, namespaceCouplesList.get(couplesIndex.getAndIncrement())));
