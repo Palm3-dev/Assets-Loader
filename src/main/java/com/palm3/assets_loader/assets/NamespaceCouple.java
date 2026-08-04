@@ -1,26 +1,38 @@
 package com.palm3.assets_loader.assets;
 
+import com.mojang.logging.LogUtils;
+import com.palm3.assets_loader.LoaderMain;
+import com.palm3.assets_loader.PrettyLogging;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Used to create a couple of related namespaces.
- * <br><b>IMPORTANT:</b> remember to not use uppercase letters, accepted chars are: [a-z0-9_.-]
- *
- * @param oldNamespace The old namespace occurring in the resourcepack files.
- * @param newOrSameNamespace The new namespace that will replace the old one (if not the same); also the name of the directory
- *                           inside the {@code assets} folder containing all the files (blockstates, models...).
- *                           Can be the same as the old one (thus the old one won't be changed).
- */
 @ParametersAreNonnullByDefault
 public record NamespaceCouple(String oldNamespace, String newOrSameNamespace) {
 
+    public static final PrettyLogging PL = new PrettyLogging(LogUtils.getLogger(), LoaderMain.DEF_PL_PARAMS);
+
+    /**
+     * Used to create a couple of related namespaces.
+     * <br><b>IMPORTANT:</b> remember to not use uppercase letters, accepted chars are: [a-z0-9_.-]
+     *
+     * @param oldNamespace The old namespace occurring in the resourcepack files.
+     * @param newOrSameNamespace The new namespace that will replace the old one (if not the same); also the name of the directory
+     *                           inside the {@code assets} folder containing all the files (blockstates, models...).
+     *                           Can be the same as the old one (thus the old one won't be changed).
+     */
     public NamespaceCouple {
-        oldNamespace = oldNamespace.toLowerCase();
-        newOrSameNamespace = newOrSameNamespace.toLowerCase();
+        if (oldNamespace.chars().anyMatch(Character::isUpperCase)) {
+            PL.logW("OLD namespace '" + oldNamespace + "' contains uppercase chars that have been made lowercase.");
+            oldNamespace = oldNamespace.toLowerCase();
+        }
+
+        if (newOrSameNamespace.chars().anyMatch(Character::isUpperCase)) {
+            PL.logW("NEW namespace '" + newOrSameNamespace + "' contains uppercase chars that have been made lowercase.");
+            newOrSameNamespace = newOrSameNamespace.toLowerCase();
+        }
     }
 
     /**
