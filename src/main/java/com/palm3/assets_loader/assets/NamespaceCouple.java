@@ -6,6 +6,7 @@ import com.palm3.assets_loader.PrettyLogging;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.nio.charset.IllegalCharsetNameException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,6 +33,13 @@ public record NamespaceCouple(String oldNamespace, String newOrSameNamespace) {
         if (newOrSameNamespace.chars().anyMatch(Character::isUpperCase)) {
             PL.logW("NEW namespace '" + newOrSameNamespace + "' contains uppercase chars that have been made lowercase.");
             newOrSameNamespace = newOrSameNamespace.toLowerCase();
+        }
+
+        if (!oldNamespace.matches("^[a-z0-9._-]+$")) {
+            throw new IllegalCharsetNameException("OLD namespace '" + oldNamespace + "' contains non [a-z0-9._-] chars!");
+        }
+        if (!newOrSameNamespace.matches("^[a-z0-9._-]+$")) {
+            throw new IllegalCharsetNameException("NEW namespace '" + newOrSameNamespace + "' contains non [a-z0-9._-] chars!");
         }
     }
 
