@@ -80,7 +80,7 @@ public class AssetsLoader {
 
             Path jarFilePath = MOD_DIR.resolve(modJarFile);
             for (NamespaceCouple namespaceCouple : namespaceCouples) {
-                PL.logSpaceI(EXTRACT);
+                PL.logI(PL.line1, EXTRACT);
                 coupleSPL.incrementAndLog("{" + namespaceCouple.toString() + "}");
 
                 Path assetsDestinationPath = packPath.resolve("assets").resolve(namespaceCouple.newOrSameNamespace());
@@ -98,16 +98,18 @@ public class AssetsLoader {
 
         //AssetsFilesNamespaceChanger.multipleNamespaces(packPath, jarLoadingInfos.getNonIndexedNamespaceCouplesList(true)).changeAll();
 
-        PL.logI("Adding resourcepack with internal id '" + packInfos.packFolderName() + "' to game packs.");
+        PL.logI("Adding resourcepack with internal id '" + packInfos.packFolderName() + "' to game packs.", LOAD);
         event.addRepositorySource(packRepositorySource(packInfos.packFolderName(), packInfos.packTitle(), packInfos.packDescription(), packPath, packInfos.requiredPack()));
 
         if (packInfos.deletePack()) {
-            PL.logI("Pack will be deleted when game is closed.");
+            PL.logI("Pack will be deleted when game is closed.", LOAD);
             Runtime.getRuntime().addShutdownHook(new Thread(() -> deleteDirectory(assetsLoader.tempDirectory, false, assetsLoader.tempDirIsHidden)));
         }
 
         //todo move this outside, global for all instances.
         assetsLoader.initialPackLoad = false;  // Set after the whole method or will load first jar only, dipshit.
+
+        PL.logCenteredI("Pack '" + packInfos.packFolderName() + "' loading complete!", DEF_LINE);
     }
 
     /**
@@ -129,7 +131,6 @@ public class AssetsLoader {
     public static void loadPackFromJar(AddPackFindersEvent event, String tempDirectory, boolean hidden, String modJarFile, String jarAssetsNamespace, @Nullable String newNamespace,
                                        String iconFileName, ResourcePackInfos packInfos, boolean forceCopy, LogCopyOption logCopyOption) {
         modJarFile = modJarFile.endsWith(".jar") ? modJarFile : modJarFile + ".jar";
-        createDirectoryAndGetPath(tempDirectory, hidden);
 
         Path jarFilePath = MOD_DIR.resolve(modJarFile);
         Path packPath = createDirectoryAndGetPath(tempDirectory, hidden).resolve(packInfos.packFolderName());
@@ -280,6 +281,7 @@ public class AssetsLoader {
      * @param namespaceToCopy The assets namespace you want to copy from the jar.
      * @param forceCopy If the file copy should be forced (replacing the old files), even if the files are already there.
      * @param logCopyOption Decide if you want to log always, when you replace files or never.
+     * @param marker Optional logger marker.
      * @see LogCopyOption
      */
     // Holy nested method, warning provided.
@@ -322,10 +324,10 @@ public class AssetsLoader {
                     if ((Files.exists(copyTarget) && forceCopy) || !Files.exists(copyTarget)) {
                         if (Files.isRegularFile(path)) {
                             try (InputStream is = Files.newInputStream(path)) {
+                                if (!Files.exists(copyTarget)) copiedFiles.incrementAndGet();
+                                else replacedFiles.incrementAndGet();
                                 PL.conditionalI(logCopyOption.canLog(copyTarget), "Coping file '" + relativeJarAsset + "'", marker);
                                 Files.copy(is, copyTarget, StandardCopyOption.REPLACE_EXISTING);
-                                if (Files.exists(copyTarget)) copiedFiles.incrementAndGet();  // Why like this? Idk, but the other way logs the opposite (copy when existing)
-                                else replacedFiles.incrementAndGet();
                             } catch (IOException e) {
                                 PL.logE("Exception caught during copy of file " + path + " inside destination directory " + GAME_DIR.relativize(filesDestinationPath) + ". Exception: " + e, marker);
                             }
@@ -352,7 +354,7 @@ public class AssetsLoader {
                 PL.logI("Copied directories: " + copiedDirectories.get(), marker);
                 PL.logI("Copied files: " + copiedFiles.get(), marker);
                 PL.logI("Replaced files: " + replacedFiles.get(), marker);
-                PL.conditionalI(allAlreadyExist.get(), "-> No copy done, already existing files.", marker);
+                PL.conditionalI(allAlreadyExist.get() && !forceCopy, "-> No copy done, already existing files.", marker);
                 PL.logI(PL.line2, marker);
 
             } catch (IOException e) {
@@ -370,6 +372,7 @@ public class AssetsLoader {
      * @param iconFileName The name of the icon file you want to copy.
      * @param iconDestinationFolderPath The destination folder where the icon will be copied into.
      * @param newIconFileName The new icon file name. If {@code null} it will remain the old one given in 'iconFileName'.
+     * @param marker Optional logger marker.
      */
     public static void copyJarIcon(Path jarFilePath, String iconFileName, Path iconDestinationFolderPath, @Nullable String newIconFileName, Marker... marker) {
         try (FileSystem jarFileSystem = FileSystems.newFileSystem(jarFilePath)) {
@@ -395,12 +398,6 @@ public class AssetsLoader {
         } catch (IOException e) {
             PL.logE("Exception caught during jar file system creation: " + e, marker);
         }
-
-
-
-
-
-
     }
 
     /**
@@ -409,11 +406,11 @@ public class AssetsLoader {
      * @param iconPath The path of the icon file.
      * @param iconDestinationFolderPath The destination folder where the icon will be copied into.
      * @param newIconFileName The new icon file name. If {@code null} it will remain the old one (last part of the path, the file).
-     * @param morelDebug If more debug infos on the icon file you're trying to copy should be printed.
+     * @param moreDebug If more debug infos on the icon file you're trying to copy should be printed.
      *                   <br>It's here for testing purposes only, should always be set false when you're sure the copy works.
      */
-    public static void copyPngIcon(Path iconPath, Path iconDestinationFolderPath, @Nullable String newIconFileName, boolean morelDebug) {
-        if (morelDebug) {
+    public static void copyPngIcon(Path iconPath, Path iconDestinationFolderPath, @Nullable String newIconFileName, boolean moreDebug) {
+        if (moreDebug) {
             PL.logI("Debug infos about the icon file you're trying to copy:");
             PL.logI("Given icon path: " + iconPath);
             PL.logI("Readable: " + Files.isReadable(iconPath));
@@ -451,127 +448,4 @@ public class AssetsLoader {
 
         }
     }
-
-
-
-
-
-    /**
-     * @deprecated - Unsafe
-     * <br>
-     * Copies the files from the jar to the destination folder to be used as resourcepack.
-     * @param jarFilePath The location of the jar file. E.g. {@code .minecraft/mods/my_mod_file-1.0.jar}
-     * @param destinationPath The destination path where the files should go in (for 'files' it's intended all the files inside the {@code assets/namespace/*} folder).
-     * @param namespaceToCopy The assets namespace you want to copy from the jar.
-     * @param iconFileName The name of the icon file inside the root of the jar file (without the file extension).
-     * @param iconDestinationPath The destination folder where the icon should go inside.
-     *                            Set to null if you set {@code .minecraft/temporary_dir/resourcepack_name/assets/namespace} as {@code destinationPath}
-     *                            to automatically copy the icon inside the resourcepack root.
-     * @param forceCopy If the file copy should be forced, even if the files are already there.
-     * @param logCopy If the copied files should be PL.logged (suggested disabling it for large mods with lots of assets).
-     */
-    @Deprecated(forRemoval = true)
-    @SuppressWarnings("all")
-    public static void copyAssetsFromJar_unsafe(Path jarFilePath, Path destinationPath, String namespaceToCopy, String iconFileName, @Nullable Path iconDestinationPath, boolean forceCopy, boolean logCopy) {
-        try (FileSystem jarFileSystem = FileSystems.newFileSystem(jarFilePath, (ClassLoader) null)) {
-            PL.logI("Creating jar file system...");
-
-            Path jarAssets = jarFileSystem.getPath("/assets/" + namespaceToCopy);
-            // The location of all the assets files inside the jar file under the given namespace.
-
-            try {
-                PL.logI("Walking jar file assets and coping...");
-                PL.logI("| --> Coping assets from directory: " + jarAssets + ". Jar file system root: " + jarFilePath + "/");
-                PL.logI("--> | Coping assets inside directory: " + destinationPath);
-                if (logCopy) PL.logI(PL.line2);
-
-                AtomicInteger totalFiles = new AtomicInteger(0);
-                AtomicInteger totalDirectories = new AtomicInteger(0);
-                AtomicInteger copiedFiles = new AtomicInteger(0);
-                AtomicInteger copiedDirectories = new AtomicInteger(0);
-
-                Files.walk(jarAssets).forEach(path -> {  // Walk all jar assets.
-
-                    Path relativeJarAsset = jarAssets.relativize(path);
-                    // The path of the jar asset (single file here) relative to the jar file assets.
-                    // It's the path but starting only from under 'assets/namespaceToCopy/<-- from here'.
-
-                    Path copyTarget = destinationPath.resolve(relativeJarAsset.toString());
-                    // After the relativization, this is the full destination path of the file/folder.
-
-                    if (!Files.exists(copyTarget) && !forceCopy) {
-                        // If current path is a directory, create a directory, otherwise copy the file.
-
-                        //DIR
-                        if (Files.isDirectory(path)) {
-                            try {
-                                if (logCopy) PL.logI("Coping directory " + relativeJarAsset);
-                                Files.createDirectories(copyTarget);
-                            } catch (IOException e) {
-                                PL.logE("Exception caught during creation of directory " + copyTarget + ". Exception: " + e);
-                            }
-
-                            copiedDirectories.incrementAndGet();
-
-                            //FILE
-                        } else {
-                            try (InputStream is = Files.newInputStream(path)) {
-                                if (logCopy) PL.logI("Coping file " + relativeJarAsset);
-                                Files.copy(is, copyTarget, StandardCopyOption.REPLACE_EXISTING);
-                            } catch (IOException e) {
-                                PL.logE("Exception caught during copy of file " + path + " inside destination directory " + GAME_DIR.relativize(destinationPath) + ". Exception: " + e);
-                            }
-
-                            copiedFiles.incrementAndGet();
-
-                        }
-
-                    } else if (logCopy) {
-                        //DIR
-                        if (Files.isDirectory(copyTarget))
-                            PL.logI("Directory " + relativeJarAsset + " already exists.");
-                            //FILE
-                        else
-                            PL.logI("File " + relativeJarAsset + " already exists.");
-                    }
-
-                    if (Files.isDirectory(path)) totalDirectories.incrementAndGet();
-                    else totalFiles.incrementAndGet();
-
-                });
-
-                PL.logI("--------------- Copy results ---------------");
-                PL.logI("Total directories: " + totalDirectories.get());
-                PL.logI("Total files: " + totalFiles.get());
-                PL.logI("Copied directories: " + copiedDirectories.get());
-                PL.logI("Copied files: " + copiedFiles.get());
-                if (copiedDirectories.get() == 0 && copiedFiles.get() == 0) PL.logI("-> No copy done, already existing files.");
-                PL.logI("--------------------------------------------");
-
-            } catch (IOException e) {
-                PL.logE("Exception caught during files walk: " + e);
-            }
-
-            // Icon file
-            Path iconPath = jarFileSystem.getPath("/" + iconFileName + ".png");
-            if (Files.exists(iconPath)) {
-                try (InputStream is = Files.newInputStream(iconPath)) {
-                    PL.logI("Coping icon file " + iconPath + " from jar file");
-                    Files.copy(is,
-                            iconDestinationPath == null ? destinationPath.getParent().getParent().resolve("pack.png")
-                                    : iconDestinationPath.resolve("pack.png"),
-                            StandardCopyOption.REPLACE_EXISTING
-                    );
-                } catch (IOException e) {
-                    PL.logE("Exception caught during copy of icon file " + iconPath + ".png. Exception: {" + e);
-                }
-            } else {
-                PL.logW("No icon file found in jar file. Searched: " + iconPath);
-            }
-
-        } catch (IOException e) {
-            PL.logE("Exception caught during jar file system creation: " + e);
-        }
-    }
-
 }
