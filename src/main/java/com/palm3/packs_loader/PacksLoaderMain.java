@@ -25,35 +25,6 @@ public class PacksLoaderMain {
     public static final String MOD_VERSION = "1.0.0";
     public static final String DISCORD_LINK = "https://discord.com/invite/BuMv2f8epp";
     public static final ModLoader MOD_LOADER = ModLoader.NEOFORGE;
-    private static boolean initialPackLoad = true;
-
-    /**
-     * This method is used to distinguish the {@link AddPackFindersEvent} firing time.
-     * <p>
-     *     <h3>Event firing times:</h3>
-     *     The first time the event gets called is in the mod lifecycle (when all the mods get loaded).
-     *     This is the moment where the loaders <b>need</b> to copy and create the resourcepacks.
-     *     The event gets also called outside the {@link net.neoforged.fml.event.IModBusEvent} (and the mod lifecycle) every time
-     *     some changes to the resourcepacks are made in-game. To avoid logging unwanted stuff and most importantly avoid
-     *     coping all the resourcepack files every time changes are made in-game (completely not necessary, and you also get several disc writes)
-     *     this method is used in various other methods.
-     *     <h3>Usage and value changes:</h3>
-     *     The value returned by this method is always {@code true} during the mod lifecycle (mod loading phase).
-     *     The returned value changes one time only in the mod lifecycle, when the {@link FMLCommonSetupEvent} gets fired.
-     *     Here the value ({@code true} by default) gets changed to {@code false} for the entire time the game is loaded.
-     *     You can then easly understand the usage of this method:
-     *     <pre>
-     *         {@code
-     *         if (LoaderMain.isInitialPackLoad()) {
-     *             // Do here the coping stuff for your mod methods.
-     *         }
-     *         }
-     *     </pre>
-     * </p>
-     */
-    public static boolean isInitialPackLoad() {
-        return initialPackLoad;
-    }
 
     public PacksLoaderMain(IEventBus modEventBus) {
         // Logs mod info
@@ -66,12 +37,6 @@ public class PacksLoaderMain {
         // Do actual stuff
         modEventBus.addListener(PacksLoaderMain::packFindersEvent);
     }
-
-    @SubscribeEvent
-    public static void commonSetup(FMLCommonSetupEvent event) {
-        initialPackLoad = false;
-    }
-
 
 
 
@@ -90,6 +55,7 @@ public class PacksLoaderMain {
 
     @SubscribeEvent
     public static void packFindersEvent(AddPackFindersEvent event) {
+        MAIN_PL.logI("SHIT_FIRED");
         //testing, praying it works, fingers crossed, even more than the ones i have by default
         // works, idk how i did it - 15:33
         // 19:38 - doesn't work anymore -> god, fu**, dammit (holy cit here)
@@ -111,7 +77,7 @@ public class PacksLoaderMain {
                 "ultimate_shitpack",
                 Component.literal("ulti-title"),
                 Component.literal("ulti-description"),
-                true,
+                false,
                 false
         );
 

@@ -1,6 +1,7 @@
 package com.palm3.packs_loader.assets;
 
 import com.mojang.logging.LogUtils;
+import com.palm3.packs_loader.PacksLoaderMain;
 import com.palm3.packs_loader.PrettyLogging;
 import com.palm3.packs_loader.assets.patchers.AssetsFilesNamespaceChanger;
 import net.minecraft.network.chat.Component;
@@ -47,7 +48,6 @@ public class AssetsLoader {
     private final Path tempDirectoryPath;
     private final boolean tempDirIsHidden;
     private final String loaderModName;  // Mod name?
-    protected boolean initialPackLoad = true;  // Used to know if the AddPackFinders event is called from the mod lifecycle (mod are being loaded) or from minecraft packs reload.
 
     /**
      * Used to create an instance of {@link AssetsLoader}. The class should be something like this:
@@ -63,6 +63,19 @@ public class AssetsLoader {
         this.loaderModName = mod_id;
         this.tempDirectoryPath = createDirectoryAndGetPath(this.tempDirectory, tempDirIsHidden);
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     //================= STATIC LOADERS - FULL =================
     public static void loadPack(AddPackFindersEvent event, PackLoadingContext context) {
@@ -84,11 +97,11 @@ public class AssetsLoader {
                 coupleSPL.incrementAndLog("{" + namespaceCouple.toString() + "}");
 
                 Path assetsDestinationPath = packPath.resolve("assets").resolve(namespaceCouple.newOrSameNamespace());
-                if (!context.distinguishEventFireTime() || assetsLoader.initialPackLoad) {
+                //if (!context.distinguishEventFireTime() || PacksLoaderMain.isInitialPackLoad()) {
                     copyAssetsFromJar(jarFilePath, assetsDestinationPath, namespaceCouple.oldNamespace(), jarLoadingInfos.forceCopyAssets(), jarLoadingInfos.logCopyOption(), EXTRACT);
                     if (jarLoadingInfos.jarIconFile().iconJarFile().equals(modJarFile))
                         copyJarIcon(jarFilePath, jarLoadingInfos.jarIconFile().iconFileName(), packPath, "pack", EXTRACT);
-                }
+                //}
 
                 /*if (jarLoadingInfos.oldObjLoader() != null)
                     ModelsChanger.createNew(packPath, namespaceCouple.newOrSameNamespace(), jarLoadingInfos.oldObjLoader()).changeModelsObjLoader(AssetType.ALL_MODELS);
@@ -105,9 +118,6 @@ public class AssetsLoader {
             PL.logI("Pack will be deleted when game is closed.", LOAD);
             Runtime.getRuntime().addShutdownHook(new Thread(() -> deleteDirectory(assetsLoader.tempDirectory, false, assetsLoader.tempDirIsHidden)));
         }
-
-        //todo move this outside, global for all instances.
-        assetsLoader.initialPackLoad = false;  // Set after the whole method or will load first jar only, dipshit.
 
         PL.logCenteredI("Pack '" + packInfos.packFolderName() + "' loading complete!", DEF_LINE);
     }
