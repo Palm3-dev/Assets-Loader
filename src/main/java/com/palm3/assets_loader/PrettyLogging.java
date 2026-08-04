@@ -209,6 +209,15 @@ public class PrettyLogging {
     }
 
     /**
+     * Logs the given message centered relative to the given string.
+     * @param msg The message to center.
+     * @param relativeTo The message to center the given string to.
+     */
+    public void logCenteredI(String msg, String relativeTo) {
+        LOGGER.info(centerString(msg, relativeTo, true, true));
+    }
+
+    /**
      * Logs infos if the condition is true.
      * @param condition The condition expression, logs if true.
      * @param msg The message of the log.
