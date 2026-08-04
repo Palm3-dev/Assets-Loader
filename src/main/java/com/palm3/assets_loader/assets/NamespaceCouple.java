@@ -7,16 +7,22 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Used to create a couple of namespaces that need to be changed.
+ * Used to create a couple of related namespaces.
  * <br><b>IMPORTANT:</b> remember to not use uppercase letters, accepted chars are: [a-z0-9_.-]
  *
  * @param oldNamespace The old namespace occurring in the resourcepack files.
- * @param newOrSameNamespace The new namespace that will replace the old one; also the name of the directory
+ * @param newOrSameNamespace The new namespace that will replace the old one (if not the same); also the name of the directory
  *                           inside the {@code assets} folder containing all the files (blockstates, models...).
  *                           Can be the same as the old one (thus the old one won't be changed).
  */
 @ParametersAreNonnullByDefault
 public record NamespaceCouple(String oldNamespace, String newOrSameNamespace) {
+
+    public NamespaceCouple {
+        oldNamespace = oldNamespace.toLowerCase();
+        newOrSameNamespace = newOrSameNamespace.toLowerCase();
+    }
+
     /**
      * Creates a list of multiple {@link NamespaceCouple}. Uppercase will be replaced with lowercase.
      * <p>
