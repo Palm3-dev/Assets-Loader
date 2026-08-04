@@ -1,11 +1,9 @@
-package com.palm3.assets_loader.assets;
+package com.palm3.packs_loader.assets;
 
 import com.mojang.logging.LogUtils;
-import com.palm3.assets_loader.LoaderMain;
-import com.palm3.assets_loader.ModLoader;
-import com.palm3.assets_loader.PrettyLogging;
+import com.palm3.packs_loader.PacksLoaderMain;
+import com.palm3.packs_loader.PrettyLogging;
 
-import javax.annotation.Nullable;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -15,7 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public record JarLoadingInfos(LinkedHashMap<String, List<NamespaceCouple>> namespaceCouplesByJarFile, JarLoadingInfos.JarIconFile jarIconFile,
                               boolean forceCopyAssets, AssetsLoader.LogCopyOption logCopyOption) {
 
-    private static final PrettyLogging PL = new PrettyLogging(LogUtils.getLogger(), LoaderMain.DEF_PL_PARAMS);
+    private static final PrettyLogging PL = new PrettyLogging(LogUtils.getLogger(), PacksLoaderMain.DEF_PL_PARAMS);
 
     /**
      * Defines the jar icon file for a resourcepack.
@@ -30,7 +28,7 @@ public record JarLoadingInfos(LinkedHashMap<String, List<NamespaceCouple>> names
      *                                  {@link List}s of namespace couples for every jar file.
      * @param jarIconFile An instance of the record {@link JarIconFile} used to know which icon file to use for the pack.
      * @param forceCopyAssets If the assets copy should be forced: this means that if the files are already there they will get overwritten.
-     * @param logCopyOption The option for the jar copy logs. See {@link com.palm3.assets_loader.assets.AssetsLoader.LogCopyOption}
+     * @param logCopyOption The option for the jar copy logs. See {@link com.palm3.packs_loader.assets.AssetsLoader.LogCopyOption}
      */
     public JarLoadingInfos {
         if (namespaceCouplesByJarFile.isEmpty()) {

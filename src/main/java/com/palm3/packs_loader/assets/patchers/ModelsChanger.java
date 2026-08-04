@@ -1,9 +1,9 @@
-package com.palm3.assets_loader.assets.patchers;
+package com.palm3.packs_loader.assets.patchers;
 
 import com.mojang.logging.LogUtils;
-import com.palm3.assets_loader.LoaderMain;
-import com.palm3.assets_loader.ModLoader;
-import com.palm3.assets_loader.PrettyLogging;
+import com.palm3.packs_loader.PacksLoaderMain;
+import com.palm3.packs_loader.ModLoader;
+import com.palm3.packs_loader.PrettyLogging;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -20,7 +20,7 @@ import java.util.stream.Stream;
  */
 public class ModelsChanger {
 
-    private static final PrettyLogging PL = new PrettyLogging(LogUtils.getLogger(), LoaderMain.DEF_PL_PARAMS);
+    private static final PrettyLogging PL = new PrettyLogging(LogUtils.getLogger(), PacksLoaderMain.DEF_PL_PARAMS);
     private final Path modelsDirectory;
     private final ModLoader fromLoader;
     private final ModLoader toLoader;
@@ -49,7 +49,7 @@ public class ModelsChanger {
      * @param fromLoader The loader that the models currently have, will be changed.
      */
     public static ModelsChanger createNew(Path packDirectory, String namespace, ModLoader fromLoader) {
-        return new ModelsChanger(packDirectory, namespace, fromLoader, LoaderMain.MOD_LOADER);
+        return new ModelsChanger(packDirectory, namespace, fromLoader, PacksLoaderMain.MOD_LOADER);
     }
 
     /// @return The {@link Path} of the item models directory.

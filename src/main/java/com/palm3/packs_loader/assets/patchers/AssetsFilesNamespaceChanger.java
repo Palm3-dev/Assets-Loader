@@ -1,10 +1,10 @@
-package com.palm3.assets_loader.assets.patchers;
+package com.palm3.packs_loader.assets.patchers;
 
 import com.mojang.logging.LogUtils;
-import com.palm3.assets_loader.LoaderMain;
-import com.palm3.assets_loader.PrettyLogging;
-import com.palm3.assets_loader.assets.AssetsLoader;
-import com.palm3.assets_loader.assets.NamespaceCouple;
+import com.palm3.packs_loader.PacksLoaderMain;
+import com.palm3.packs_loader.PrettyLogging;
+import com.palm3.packs_loader.assets.AssetsLoader;
+import com.palm3.packs_loader.assets.NamespaceCouple;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
@@ -50,7 +50,7 @@ import java.util.stream.Stream;
 @ParametersAreNonnullByDefault
 public class AssetsFilesNamespaceChanger {
 
-    private static final PrettyLogging PL = new PrettyLogging(LogUtils.getLogger(), LoaderMain.DEF_PL_PARAMS);
+    private static final PrettyLogging PL = new PrettyLogging(LogUtils.getLogger(), PacksLoaderMain.DEF_PL_PARAMS);
     private final @NotNull Path assetsDirectory;
     private final @NotNull List<NamespaceCouple> namespacesCouples;
 

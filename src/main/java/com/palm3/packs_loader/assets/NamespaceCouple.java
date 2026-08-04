@@ -1,8 +1,8 @@
-package com.palm3.assets_loader.assets;
+package com.palm3.packs_loader.assets;
 
 import com.mojang.logging.LogUtils;
-import com.palm3.assets_loader.LoaderMain;
-import com.palm3.assets_loader.PrettyLogging;
+import com.palm3.packs_loader.PacksLoaderMain;
+import com.palm3.packs_loader.PrettyLogging;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -13,7 +13,7 @@ import java.util.List;
 @ParametersAreNonnullByDefault
 public record NamespaceCouple(String oldNamespace, String newOrSameNamespace) {
 
-    public static final PrettyLogging PL = new PrettyLogging(LogUtils.getLogger(), LoaderMain.DEF_PL_PARAMS);
+    public static final PrettyLogging PL = new PrettyLogging(LogUtils.getLogger(), PacksLoaderMain.DEF_PL_PARAMS);
 
     /**
      * Used to create a couple of related namespaces.

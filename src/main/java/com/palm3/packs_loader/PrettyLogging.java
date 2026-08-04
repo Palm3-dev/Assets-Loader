@@ -1,4 +1,4 @@
-package com.palm3.assets_loader;
+package com.palm3.packs_loader;
 
 import com.mojang.logging.LogUtils;
 import org.slf4j.Logger;
@@ -82,7 +82,7 @@ public class PrettyLogging {
     public void logLineI(String msg, LogPos logPos, Marker... marker) {
         if (logPos == LogPos.BEFORE || logPos == LogPos.BOTH)
             LOGGER.info(getMarker(marker), DEF_LINE);
-        if (!msg.isEmpty()) LoaderMain.LOGGER.info(msg);
+        if (!msg.isEmpty()) PacksLoaderMain.LOGGER.info(msg);
         if (logPos == LogPos.AFTER || logPos == LogPos.BOTH)
             LOGGER.info(getMarker(marker), DEF_LINE);
     }

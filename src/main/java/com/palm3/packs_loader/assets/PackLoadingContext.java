@@ -1,4 +1,4 @@
-package com.palm3.assets_loader.assets;
+package com.palm3.packs_loader.assets;
 
 /**
  * Record holds the necessary dependencies to load a pack.

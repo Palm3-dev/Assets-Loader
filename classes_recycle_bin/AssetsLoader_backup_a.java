@@ -1,9 +1,9 @@
-package com.palm3.assets_loader.backup_classes;
+package com.palm3.packs_loader.backup_classes;
 
 import com.mojang.logging.LogUtils;
-import com.palm3.assets_loader.PrettyLogging;
-import com.palm3.assets_loader.assets.NamespaceCouple;
-import com.palm3.assets_loader.assets.patchers.AssetsFilesNamespaceChanger;
+import com.palm3.packs_loader.PrettyLogging;
+import com.palm3.packs_loader.assets.NamespaceCouple;
+import com.palm3.packs_loader.assets.patchers.AssetsFilesNamespaceChanger;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.packs.PackLocationInfo;
 import net.minecraft.server.packs.PackSelectionConfig;
@@ -26,9 +26,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
-import static com.palm3.assets_loader.LoaderMain.*;
-import static com.palm3.assets_loader.PrettyLogging.DEF_EMPTY_LINE;
-import static com.palm3.assets_loader.PrettyLogging.LogPos;
+import static com.palm3.packs_loader.LoaderMain.*;
+import static com.palm3.packs_loader.PrettyLogging.DEF_EMPTY_LINE;
+import static com.palm3.packs_loader.PrettyLogging.LogPos;
 
 /**
  * {@link AssetsLoader_backup_a} is used to load Minecraft mods assets that cannot be used and published directly from your mod.

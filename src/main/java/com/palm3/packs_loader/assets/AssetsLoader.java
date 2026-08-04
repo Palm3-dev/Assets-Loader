@@ -1,8 +1,8 @@
-package com.palm3.assets_loader.assets;
+package com.palm3.packs_loader.assets;
 
 import com.mojang.logging.LogUtils;
-import com.palm3.assets_loader.PrettyLogging;
-import com.palm3.assets_loader.assets.patchers.AssetsFilesNamespaceChanger;
+import com.palm3.packs_loader.PrettyLogging;
+import com.palm3.packs_loader.assets.patchers.AssetsFilesNamespaceChanger;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.packs.*;
 import net.minecraft.server.packs.repository.*;
@@ -23,8 +23,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
-import static com.palm3.assets_loader.LoaderMain.*;
-import static com.palm3.assets_loader.PrettyLogging.*;
+import static com.palm3.packs_loader.PacksLoaderMain.*;
+import static com.palm3.packs_loader.PrettyLogging.*;
 
 //todo finish the javadoc
 /**

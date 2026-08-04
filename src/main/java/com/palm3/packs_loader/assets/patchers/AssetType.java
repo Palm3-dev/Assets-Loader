@@ -1,4 +1,4 @@
-package com.palm3.assets_loader.assets.patchers;
+package com.palm3.packs_loader.assets.patchers;
 
 import java.util.EnumSet;
 

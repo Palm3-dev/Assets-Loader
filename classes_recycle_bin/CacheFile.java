@@ -1,4 +1,4 @@
-package com.palm3.assets_loader.base;
+package com.palm3.packs_loader.base;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
