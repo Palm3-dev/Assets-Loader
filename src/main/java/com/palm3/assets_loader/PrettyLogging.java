@@ -4,6 +4,7 @@ import com.mojang.logging.LogUtils;
 import org.slf4j.Logger;
 
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @ParametersAreNonnullByDefault
 public class PrettyLogging {
@@ -214,6 +215,101 @@ public class PrettyLogging {
      */
     public void conditionalI(boolean condition, String msg) {
         if (condition) LOGGER.info(msg);
+    }
+
+    /**
+     * {@link StepProcessLogger} is used to log a loading process that is made of multiple phases.
+     * After you create the class, the methods {@link StepProcessLogger#incrementAndLog()} and
+     * {@link StepProcessLogger#logAndIncrement()} are used to log the steps.
+     */
+    public class StepProcessLogger {
+        public final AtomicInteger currentStep = new AtomicInteger();
+        public final int totalSteps;
+        private final String msg;
+
+        /**
+         * Creates an instance of the class. The internal counter <b>starts from zero.</b>
+         * @param msg The message that will be logged before every step status (e.g. before 1/2).
+         * @param totalSteps The total steps of the process.
+         * <p>
+         *                   <pre>
+         *                       {@code
+         *                       // Example usage of the class.
+         *
+         *                       // First you need a PrettyLogging instance, here created with DefaultPrettyLoggingParams.
+         *                       public static final PrettyLogging PL = new PrettyLogging(LogUtils.getLogger(), DEF_PL_PARAMS);
+         *
+         *                       // Next create the instance.
+         *                       PrettyLogging.StepProcessLogger filesSPL = PL.new StepProcessLogger("Loading file:", 3);
+         *
+         *                       // Usage in a loop
+         *                       for (int i = 0; i < 3; i++) {
+         *                           filesSPL.incrementAndLog();  // Increments value and logs
+         *                       }
+         *
+         *                       // Result logs
+         *                       [MyClass]: Loading file: 1/3
+         *                       [MyClass]: Loading file: 2/3
+         *                       [MyClass]: Loading file: 3/3
+         *                       }
+         *                   </pre>
+         * </p>
+         */
+        public StepProcessLogger(String msg, int totalSteps) {
+            this.msg = msg;
+            this.totalSteps = totalSteps;
+        }
+
+        /**
+         * First increments the step value, and then logs the incremented step.
+         * <br>As shown in the constructor description:
+         * <p>
+         *                   <pre>
+         *                       {@code
+         *                       // Class instance.
+         *                       PrettyLogging.StepProcessLogger filesSPL = PL.new StepProcessLogger("Loading file:", 3);
+         *
+         *                       // Usage in a loop
+         *                       for (int i = 0; i < 3; i++) {
+         *                           filesSPL.incrementAndLog();  // Increments step and logs
+         *                       }
+         *
+         *                       // Result logs
+         *                       [MyClass]: Loading file: 1/3
+         *                       [MyClass]: Loading file: 2/3
+         *                       [MyClass]: Loading file: 3/3
+         *                       }
+         *                   </pre>
+         * </p>
+         */
+        public void incrementAndLog() {
+            LOGGER.info("{} {}/{}", msg, currentStep.incrementAndGet(), totalSteps);
+        }
+
+        /**
+         * First logs the step value and then increments it.
+         * <p>
+         *                   <pre>
+         *                       {@code
+         *                       // Class instance.
+         *                       PrettyLogging.StepProcessLogger filesSPL = PL.new StepProcessLogger("Loading file:", 3);
+         *
+         *                       // Usage in a loop
+         *                       for (int i = 0; i < 3; i++) {
+         *                           filesSPL.logAndIncrement();  // Logs and then increments step.
+         *                       }
+         *
+         *                       // Result logs
+         *                       [MyClass]: Loading file: 0/3
+         *                       [MyClass]: Loading file: 1/3
+         *                       [MyClass]: Loading file: 2/3
+         *                       }
+         *                   </pre>
+         * </p>
+         */
+        public void logAndIncrement() {
+            LOGGER.info("{} {}/{}", msg, currentStep.getAndIncrement(), totalSteps);
+        }
     }
 
     /**
