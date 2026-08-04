@@ -14,6 +14,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public record JarLoadingInfos(LinkedHashMap<String, List<NamespaceCouple>> namespaceCouplesByJarFile, JarLoadingInfos.JarIconFile jarIconFile,
                               boolean forceCopyAssets, AssetsLoader.LogCopyOption logCopyOption) {
+
     private static final PrettyLogging PL = new PrettyLogging(LogUtils.getLogger(), LoaderMain.DEF_PL_PARAMS);
 
     /**
@@ -23,6 +24,14 @@ public record JarLoadingInfos(LinkedHashMap<String, List<NamespaceCouple>> names
      */
     public record JarIconFile(String iconJarFile, String iconFileName) {}
 
+    /**
+     * Creates an instance of this record.
+     * @param namespaceCouplesByJarFile an {@link HashMap} containing as keys the mod jar files and as values
+     *                                  {@link List}s of namespace couples for every jar file.
+     * @param jarIconFile An instance of the record {@link JarIconFile} used to know which icon file to use for the pack.
+     * @param forceCopyAssets If the assets copy should be forced: this means that if the files are already there they will get overwritten.
+     * @param logCopyOption The option for the jar copy logs. See {@link com.palm3.assets_loader.assets.AssetsLoader.LogCopyOption}
+     */
     public JarLoadingInfos {
         if (namespaceCouplesByJarFile.isEmpty()) {
             throw new IllegalArgumentException("Given mod jar files HashMap is empty, nothing to load!");
