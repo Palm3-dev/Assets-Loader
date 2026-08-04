@@ -65,19 +65,47 @@ public class AssetsLoader {
     }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
     //================= STATIC LOADERS - FULL =================
+    /**
+     * Loads a pack in-game.
+     * <p>
+     *     <h3>How to use the method:</h3>
+     *     <pre>
+     *         {@code
+     *          // Inside your main mod class (annotated with @Mod(MyMainClass.MOD_ID))
+     *
+     *          // You should have the global static AssetsLoader instance.
+     *          public static final String MOD_ID = "my_mod_id";
+     *          public static final AssetsLoader LOADER =  AssetsLoader.newAssetLoader(".temp_assets", true, Main.MOD_ID);
+     *
+     *          public MyMainClass(IEventBus modEventBus) {
+     *              modEventBus.addListener(MyMainClass::addPackFinders);  // Add the subscribed method here.
+     *          }
+     *
+     *          @SubscribeEvent
+     *          public static void addPackFinders(AddPackFindersEvent event) {
+     *              // Here you need these record instances:
+     *              JarLoadingInfos jarLoadingInfos = new JarLoadingInfos(...);
+     *              ResourcePackInfos packInfos = new ResourcePackInfos(...);
+     *
+     *              // Having these classes, now create a PackLoadingContext and pass the previous classes to the constructor.
+     *              PackLoadingContext ctx = new PackLoadingContext(LOADER, jarLoadingInfos, packInfos);
+     *
+     *              // Finally, load your pack.
+     *              AssetsLoader.loadPack(event, ctx);
+     *          }
+     *         }
+     *     </pre>
+     * </p>
+     * @param event The {@link AddPackFindersEvent}.
+     * @param context An instance of {@link PackLoadingContext}.
+     * @see JarLoadingInfos
+     * @see ResourcePackInfos
+     * @see PackLoadingContext
+     * @see net.neoforged.fml.common.Mod
+     * @see net.neoforged.bus.api.SubscribeEvent
+     * @see AddPackFindersEvent
+     */
     public static void loadPack(AddPackFindersEvent event, PackLoadingContext context) {
         AssetsLoader assetsLoader = context.assetsLoader();
         JarLoadingInfos jarLoadingInfos = context.jarLoadingInfos();
@@ -93,23 +121,14 @@ public class AssetsLoader {
 
             Path jarFilePath = MOD_DIR.resolve(modJarFile);
             for (NamespaceCouple namespaceCouple : namespaceCouples) {
-                PL.logI(PL.line1, EXTRACT);
                 coupleSPL.incrementAndLog("{" + namespaceCouple.toString() + "}");
 
                 Path assetsDestinationPath = packPath.resolve("assets").resolve(namespaceCouple.newOrSameNamespace());
-                //if (!context.distinguishEventFireTime() || PacksLoaderMain.isInitialPackLoad()) {
-                    copyAssetsFromJar(jarFilePath, assetsDestinationPath, namespaceCouple.oldNamespace(), jarLoadingInfos.forceCopyAssets(), jarLoadingInfos.logCopyOption(), EXTRACT);
-                    if (jarLoadingInfos.jarIconFile().iconJarFile().equals(modJarFile))
-                        copyJarIcon(jarFilePath, jarLoadingInfos.jarIconFile().iconFileName(), packPath, "pack", EXTRACT);
-                //}
-
-                /*if (jarLoadingInfos.oldObjLoader() != null)
-                    ModelsChanger.createNew(packPath, namespaceCouple.newOrSameNamespace(), jarLoadingInfos.oldObjLoader()).changeModelsObjLoader(AssetType.ALL_MODELS);
-                */
+                copyAssetsFromJar(jarFilePath, assetsDestinationPath, namespaceCouple.oldNamespace(), jarLoadingInfos.forceCopyAssets(), jarLoadingInfos.logCopyOption(), EXTRACT);
+                if (jarLoadingInfos.jarIconFile().iconJarFile().equals(modJarFile))
+                    copyJarIcon(jarFilePath, jarLoadingInfos.jarIconFile().iconFileName(), packPath, "pack", EXTRACT);
             }
         });
-
-        //AssetsFilesNamespaceChanger.multipleNamespaces(packPath, jarLoadingInfos.getNonIndexedNamespaceCouplesList(true)).changeAll();
 
         PL.logI("Adding resourcepack with internal id '" + packInfos.packFolderName() + "' to game packs.", LOAD);
         event.addRepositorySource(packRepositorySource(packInfos.packFolderName(), packInfos.packTitle(), packInfos.packDescription(), packPath, packInfos.requiredPack()));
@@ -124,18 +143,18 @@ public class AssetsLoader {
 
     /**
      * Loads one mod jar assets to a resourcepack. Creates the temporary directory if it doesn't exist.
-     * @deprecated  This method is exposed if you want to use it for specific cases, but its usage is not recommended.
-     * Use the other loaders instead, or create your own custom method with the provided methods in {@link AssetsLoader}.
-     * @param event The add pack finders event.
-     * @param tempDirectory The temporary directory that will contain the resourcepack.
-     * @param hidden If the temporary directory is hidden.
-     * @param modJarFile The mod jar file name, including the {@code .jar} extension.
+     * @param event              The add pack finders event.
+     * @param tempDirectory      The temporary directory that will contain the resourcepack.
+     * @param hidden             If the temporary directory is hidden.
+     * @param modJarFile         The mod jar file name, including the {@code .jar} extension.
      * @param jarAssetsNamespace The namespace you want to copy.
-     * @param newNamespace The new namespace, set to null to keep the old one.
-     * @param iconFileName The name of the jar icon file.
-     * @param packInfos An instance of {@link ResourcePackInfos}.
-     * @param forceCopy If the copy of the fle should be forced, replacing the existent ones.
-     * @param logCopyOption Defines the type of copy logs.
+     * @param newNamespace       The new namespace, set to null to keep the old one.
+     * @param iconFileName       The name of the jar icon file.
+     * @param packInfos          An instance of {@link ResourcePackInfos}.
+     * @param forceCopy          If the copy of the fle should be forced, replacing the existent ones.
+     * @param logCopyOption      Defines the type of copy logs.
+     * @deprecated This method is exposed if you want to use it for specific cases, but its usage is not recommended.
+     * Use the other loaders instead, or create your own custom method with the provided methods in {@link AssetsLoader}.
      */
     @Deprecated
     public static void loadPackFromJar(AddPackFindersEvent event, String tempDirectory, boolean hidden, String modJarFile, String jarAssetsNamespace, @Nullable String newNamespace,
@@ -165,14 +184,14 @@ public class AssetsLoader {
 
 
 
-    //================== STATICS =====================
+
+    //================== STATICS - LOADING PROCESS PARTS =====================
     /**
      * Creates a directory inside the game folder {@code .minecraft}.
      * @param directory The directory you want to create, can also be a path.
      *                  E.g. {@code assets/temp}. Don't insert points in the path/folder name, they will get deleted.
-     * @param hidden If the directory should be hidden.
-     *               <br>If you're using a path, only the first (highest) directory of the path will be hidden.
-     *               <br>E.g. in {@code assets/temp} only the {@code assets} directory will be hidden (and also named {@code .assets}).
+     * @param hidden If the directory should be hidden. If you're using a path, only the first (highest) directory of the path will be hidden.
+     *               <br>E.g. in {@code assets/temp} only the {@code assets} directory will be hidden (and also renamed {@code .assets}).
      */
     public static Path createDirectoryAndGetPath(String directory, boolean hidden) {
         if (directory.contains(".")) directory = directory.replace(".", "");
@@ -207,7 +226,7 @@ public class AssetsLoader {
      * @param directory The directory you want to delete, can also be a path.
      *                  E.g. {@code assets/temp}. Don't insert points in the path/folder name, they will get deleted.
      * @param deleteItself If you want to also delete the directory itself instead of the content only.
-     * @param hidden If the directory is hidden.
+     * @param hidden If the directory is hidden (the name should also begin with '.').
      */
     public static void deleteDirectory(String directory, boolean deleteItself, boolean hidden) {
         if (directory.contains(".")) directory = directory.replace(".", "");
@@ -287,11 +306,11 @@ public class AssetsLoader {
      * Copies the asset files from the jar file to the destination folder to be used as resourcepack.
      * <br><b>NOTE:</b> it doesn't copy the icon file, use {@link AssetsLoader#copyJarIcon(Path, String, Path, String, Marker...)} for that.
      * @param jarFilePath The location of the jar file. E.g. {@code .minecraft/mods/my_mod_file-1.0.jar}
-     * @param filesDestinationPath The destination pack where the files (blockstates, models, textures...) should go in.
+     * @param filesDestinationPath The destination path where the files (blockstates, models, textures...) will be copied into.
      * @param namespaceToCopy The assets namespace you want to copy from the jar.
-     * @param forceCopy If the file copy should be forced (replacing the old files), even if the files are already there.
+     * @param forceCopy If the file copy should be forced (replacing the old destination files), even if the files are already there.
      * @param logCopyOption Decide if you want to log always, when you replace files or never.
-     * @param marker Optional logger marker.
+     * @param marker Optional logger marker. If you put more than one only the first one will be used.
      * @see LogCopyOption
      */
     // Holy nested method, warning provided.

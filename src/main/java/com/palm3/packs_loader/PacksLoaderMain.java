@@ -81,7 +81,7 @@ public class PacksLoaderMain {
                 false
         );
 
-        PackLoadingContext context = new PackLoadingContext(ASSET_LOADER, jarLoadingInfos, packInfos, true);
+        PackLoadingContext context = new PackLoadingContext(ASSET_LOADER, jarLoadingInfos, packInfos);
 
         AssetsLoader.loadPack(event, context);
 
