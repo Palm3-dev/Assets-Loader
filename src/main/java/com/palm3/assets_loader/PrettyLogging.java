@@ -231,29 +231,6 @@ public class PrettyLogging {
          * Creates an instance of the class. The internal counter <b>starts from zero.</b>
          * @param msg The message that will be logged before every step status (e.g. before 1/2).
          * @param totalSteps The total steps of the process.
-         * <p>
-         *                   <pre>
-         *                       {@code
-         *                       // Example usage of the class.
-         *
-         *                       // First you need a PrettyLogging instance, here created with DefaultPrettyLoggingParams.
-         *                       public static final PrettyLogging PL = new PrettyLogging(LogUtils.getLogger(), DEF_PL_PARAMS);
-         *
-         *                       // Next create the instance.
-         *                       PrettyLogging.StepProcessLogger filesSPL = PL.new StepProcessLogger("Loading file:", 3);
-         *
-         *                       // Usage in a loop
-         *                       for (int i = 0; i < 3; i++) {
-         *                           filesSPL.incrementAndLog();  // Increments value and logs
-         *                       }
-         *
-         *                       // Result logs
-         *                       [MyClass]: Loading file: 1/3
-         *                       [MyClass]: Loading file: 2/3
-         *                       [MyClass]: Loading file: 3/3
-         *                       }
-         *                   </pre>
-         * </p>
          */
         public StepProcessLogger(String msg, int totalSteps) {
             this.msg = msg;
@@ -261,12 +238,71 @@ public class PrettyLogging {
         }
 
         /**
-         * First increments the step value, and then logs the incremented step.
-         * <br>As shown in the constructor description:
+         * First increments the step value, and then logs the incremented step. Additional step infos can be added.
+         * @param stepInfo Additional info after the step number.
          * <p>
          *                   <pre>
          *                       {@code
-         *                       // Class instance.
+         *                       // Class instance. PrettyLogging (PL) already defined.
+         *                       PrettyLogging.StepProcessLogger filesSPL = PL.new StepProcessLogger("Loading file:", 3);
+         *
+         *                       // Lets say we have a list of strings.
+         *                       List<String> fileNames = List.of("my_file_A", "my_file_B", "my_file_C");
+         *
+         *                       // Usage in a loop
+         *                       for (int i = 0; i < 3; i++) {
+         *                           // Increments step and logs with infos.
+         *                           filesSPL.incrementAndLog("File: " + fileNames.get(i));
+         *                       }
+         *
+         *                       // Result logs
+         *                       [MyClass]: Loading file: 1/3 - File: my_file_A
+         *                       [MyClass]: Loading file: 2/3 - File: my_file_B
+         *                       [MyClass]: Loading file: 3/3 - File: my_file_C
+         *                       }
+         *                   </pre>
+         * </p>
+         */
+        public void incrementAndLog(String stepInfo) {
+            LOGGER.info("{} {}/{} {}", msg, currentStep.incrementAndGet(), totalSteps, " - " + stepInfo);
+        }
+
+        /**
+         * First increments the step value, and then logs the incremented step. Additional step infos can be added.
+         * @param stepInfo Additional info after the step number.
+         * <p>
+         *                   <pre>
+         *                       {@code
+         *                       // Class instance. PrettyLogging (PL) already defined.
+         *                       PrettyLogging.StepProcessLogger filesSPL = PL.new StepProcessLogger("Loading file:", 3);
+         *
+         *                       // Lets say we have a list of strings.
+         *                       List<String> fileNames = List.of("my_file_A", "my_file_B", "my_file_C");
+         *
+         *                       // Usage in a loop
+         *                       for (int i = 0; i < 3; i++) {
+         *                           // Logs step with infos and increments.
+         *                           filesSPL.logAndIncrement("File: " + fileNames.get(i));
+         *                       }
+         *
+         *                       // Result logs
+         *                       [MyClass]: Loading file: 0/3 - File: my_file_A
+         *                       [MyClass]: Loading file: 1/3 - File: my_file_B
+         *                       [MyClass]: Loading file: 2/3 - File: my_file_C
+         *                       }
+         *                   </pre>
+         * </p>
+         */
+        public void logAndIncrement(String stepInfo) {
+            LOGGER.info("{} {}/{} {}", msg, currentStep.getAndIncrement(), totalSteps, stepInfo);
+        }
+
+        /**
+         * First increments the step value, and then logs the incremented step.
+         * <p>
+         *                   <pre>
+         *                       {@code
+         *                       // Class instance. PrettyLogging (PL) already defined.
          *                       PrettyLogging.StepProcessLogger filesSPL = PL.new StepProcessLogger("Loading file:", 3);
          *
          *                       // Usage in a loop
@@ -291,7 +327,7 @@ public class PrettyLogging {
          * <p>
          *                   <pre>
          *                       {@code
-         *                       // Class instance.
+         *                       // Class instance. PrettyLogging (PL) already defined.
          *                       PrettyLogging.StepProcessLogger filesSPL = PL.new StepProcessLogger("Loading file:", 3);
          *
          *                       // Usage in a loop
