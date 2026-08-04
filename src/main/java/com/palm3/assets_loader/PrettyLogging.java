@@ -2,8 +2,11 @@ package com.palm3.assets_loader;
 
 import com.mojang.logging.LogUtils;
 import org.slf4j.Logger;
+import org.slf4j.Marker;
 
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @ParametersAreNonnullByDefault
 public class PrettyLogging {
@@ -74,45 +77,50 @@ public class PrettyLogging {
      * Logs the default line of =.
      * @param msg The message to log.
      * @param logPos The position of the line relative to the log message.
+     * @param marker Optional marker.
      */
-    public void logLineI(String msg, LogPos logPos) {
+    public void logLineI(String msg, LogPos logPos, Marker... marker) {
         if (logPos == LogPos.BEFORE || logPos == LogPos.BOTH)
-            LOGGER.info(DEF_LINE);
+            LOGGER.info(getMarker(marker), DEF_LINE);
         if (!msg.isEmpty()) LoaderMain.LOGGER.info(msg);
         if (logPos == LogPos.AFTER || logPos == LogPos.BOTH)
-            LOGGER.info(DEF_LINE);
+            LOGGER.info(getMarker(marker), DEF_LINE);
     }
 
     /**
      * Logs the default line (empty or of =).
+     * @param empty If the line is empty.
+     * @param marker Optional marker.
      */
-    public void logLineI(boolean empty) {
-        if (!empty) LOGGER.info(DEF_LINE);
-        else LOGGER.info(DEF_EMPTY_LINE);
+    public void logLineI(boolean empty, Marker... marker) {
+        if (!empty) LOGGER.info(getMarker(marker), DEF_LINE);
+        else LOGGER.info(getMarker(marker), DEF_EMPTY_LINE);
     }
 
     /**
      * Simply logs an info message.
      * @param msg The message to log.
+     * @param marker Optional marker.
      */
-    public void logI(String msg) {
-        LOGGER.info(msg);
+    public void logI(String msg, Marker... marker) {
+        LOGGER.info(getMarker(marker), msg);
     }
 
     /**
      * Simply logs an error message.
      * @param msg The message to log.
+     * @param marker Optional marker.
      */
-    public void logE(String msg) {
-        LOGGER.error(msg);
+    public void logE(String msg, Marker... marker) {
+        LOGGER.error(getMarker(marker), msg);
     }
 
     /**
      * Simply logs a warn message.
      * @param msg The message to log.
      */
-    public void logW(String msg) {
-        LOGGER.warn(msg);
+    public void logW(String msg, Marker... marker) {
+        LOGGER.warn(getMarker(marker), msg);
     }
 
     /**
@@ -128,27 +136,30 @@ public class PrettyLogging {
      * @param msg The message to log.
      * @param spacesNumber The number of spaces to apply.
      * @param logPos The position relative to the message in which to apply the spaces (before, after, both).
+     * @param marker Optional marker.
      */
-    public void logI(String msg, int spacesNumber, LogPos logPos) {
-        if (logPos == LogPos.BEFORE || logPos == LogPos.BOTH) logSpacesI(spacesNumber);
-        LOGGER.info(msg);
-        if (logPos == LogPos.AFTER || logPos == LogPos.BOTH) logSpacesI(spacesNumber);
+    public void logI(String msg, int spacesNumber, LogPos logPos, Marker... marker) {
+        if (logPos == LogPos.BEFORE || logPos == LogPos.BOTH) logSpacesI(spacesNumber, marker);
+        LOGGER.info(getMarker(marker), msg);
+        if (logPos == LogPos.AFTER || logPos == LogPos.BOTH) logSpacesI(spacesNumber, marker);
     }
 
     /**
      * Logs a one line space.
+     * @param marker Optional marker.
      */
-    public void logSpaceI() {
-        LOGGER.info("");
+    public void logSpaceI(Marker... marker) {
+        LOGGER.info(getMarker(marker), "");
     }
 
     /**
      * Logs the given number of spaces (empty lines).
      * @param spacesNumber The number of spaces that should be logged. Every value under 1 will be capped at one.
+     * @param marker Optional marker.
      */
-    public void logSpacesI(int spacesNumber) {
+    public void logSpacesI(int spacesNumber, Marker... marker) {
         if (spacesNumber <= 0) spacesNumber = 1;
-        for (int i = 0; i < spacesNumber; i++) LOGGER.info("");
+        for (int i = 0; i < spacesNumber; i++) LOGGER.info(getMarker(marker), "");
     }
 
     /**
@@ -202,18 +213,168 @@ public class PrettyLogging {
      * @param relativeTo The message to center the given string to.
      * @param keepSameLength If the length of the message should remain the same as the relative.
      * @param applySpaces If spaces should be applied before and after your message once centered with the relative.
+     * @param marker Optional marker.
      */
-    public void logCenteredI(String msg, String relativeTo, boolean keepSameLength, boolean applySpaces) {
-        LOGGER.info(centerString(msg, relativeTo, keepSameLength, applySpaces));
+    public void logCenteredI(String msg, String relativeTo, boolean keepSameLength, boolean applySpaces, Marker... marker) {
+        LOGGER.info(getMarker(marker), centerString(msg, relativeTo, keepSameLength, applySpaces));
+    }
+
+    /**
+     * Logs the given message centered relative to the given string.
+     * @param msg The message to center.
+     * @param relativeTo The message to center the given string to.
+     * @param marker Optional marker.
+     */
+    public void logCenteredI(String msg, String relativeTo, Marker... marker) {
+        LOGGER.info(getMarker(marker), centerString(msg, relativeTo, true, true));
     }
 
     /**
      * Logs infos if the condition is true.
      * @param condition The condition expression, logs if true.
      * @param msg The message of the log.
+     * @param marker Optional marker.
      */
-    public void conditionalI(boolean condition, String msg) {
-        if (condition) LOGGER.info(msg);
+    public void conditionalI(boolean condition, String msg, Marker... marker) {
+        if (condition) LOGGER.info(getMarker(marker), msg);
+    }
+
+    /**
+     * {@link StepProcessLogger} is used to log a loading process that is made of multiple phases.
+     * After you create the class, the methods {@link StepProcessLogger#incrementAndLog()} and
+     * {@link StepProcessLogger#logAndIncrement()} are used to log the steps.
+     */
+    public class StepProcessLogger {
+        public final AtomicInteger currentStep = new AtomicInteger();
+        public final int totalSteps;
+        private final String msg;
+        private final Marker marker;
+
+        /**
+         * Creates an instance of the class. The internal counter <b>starts from zero.</b>
+         * @param msg The message that will be logged before every step status (e.g. before 1/2).
+         * @param totalSteps The total steps of the process.
+         */
+        public StepProcessLogger(String msg, int totalSteps, Marker... marker) {
+            this.msg = msg;
+            this.totalSteps = totalSteps;
+            this.marker = getMarker(marker);
+        }
+
+        /**
+         * First increments the step value, and then logs the incremented step. Additional step infos can be added.
+         * @param stepInfo Additional info after the step number.
+         * <p>
+         *                   <pre>
+         *                       {@code
+         *                       // Class instance. PrettyLogging (PL) already defined.
+         *                       PrettyLogging.StepProcessLogger filesSPL = PL.new StepProcessLogger("Loading file:", 3);
+         *
+         *                       // Lets say we have a list of strings.
+         *                       List<String> fileNames = List.of("my_file_A", "my_file_B", "my_file_C");
+         *
+         *                       // Usage in a loop
+         *                       for (int i = 0; i < 3; i++) {
+         *                           // Increments step and logs with infos.
+         *                           filesSPL.incrementAndLog("File: " + fileNames.get(i));
+         *                       }
+         *
+         *                       // Result logs
+         *                       [MyClass]: Loading file: 1/3 - File: my_file_A
+         *                       [MyClass]: Loading file: 2/3 - File: my_file_B
+         *                       [MyClass]: Loading file: 3/3 - File: my_file_C
+         *                       }
+         *                   </pre>
+         * </p>
+         */
+        public void incrementAndLog(String stepInfo) {
+            LOGGER.info(marker, "{} {}/{} {}", msg, currentStep.incrementAndGet(), totalSteps, " - " + stepInfo);
+        }
+
+        /**
+         * First increments the step value, and then logs the incremented step. Additional step infos can be added.
+         * @param stepInfo Additional info after the step number.
+         * <p>
+         *                   <pre>
+         *                       {@code
+         *                       // Class instance. PrettyLogging (PL) already defined.
+         *                       PrettyLogging.StepProcessLogger filesSPL = PL.new StepProcessLogger("Loading file:", 3);
+         *
+         *                       // Lets say we have a list of strings.
+         *                       List<String> fileNames = List.of("my_file_A", "my_file_B", "my_file_C");
+         *
+         *                       // Usage in a loop
+         *                       for (int i = 0; i < 3; i++) {
+         *                           // Logs step with infos and increments.
+         *                           filesSPL.logAndIncrement("File: " + fileNames.get(i));
+         *                       }
+         *
+         *                       // Result logs
+         *                       [MyClass]: Loading file: 0/3 - File: my_file_A
+         *                       [MyClass]: Loading file: 1/3 - File: my_file_B
+         *                       [MyClass]: Loading file: 2/3 - File: my_file_C
+         *                       }
+         *                   </pre>
+         * </p>
+         */
+        public void logAndIncrement(String stepInfo) {
+            LOGGER.info(marker, "{} {}/{} {}", msg, currentStep.getAndIncrement(), totalSteps, stepInfo);
+        }
+
+        /**
+         * First increments the step value, and then logs the incremented step.
+         * <p>
+         *                   <pre>
+         *                       {@code
+         *                       // Class instance. PrettyLogging (PL) already defined.
+         *                       PrettyLogging.StepProcessLogger filesSPL = PL.new StepProcessLogger("Loading file:", 3);
+         *
+         *                       // Usage in a loop
+         *                       for (int i = 0; i < 3; i++) {
+         *                           filesSPL.incrementAndLog();  // Increments step and logs
+         *                       }
+         *
+         *                       // Result logs
+         *                       [MyClass]: Loading file: 1/3
+         *                       [MyClass]: Loading file: 2/3
+         *                       [MyClass]: Loading file: 3/3
+         *                       }
+         *                   </pre>
+         * </p>
+         */
+        public void incrementAndLog() {
+            LOGGER.info(marker, "{} {}/{}", msg, currentStep.incrementAndGet(), totalSteps);
+        }
+
+        /**
+         * First logs the step value and then increments it.
+         * <p>
+         *                   <pre>
+         *                       {@code
+         *                       // Class instance. PrettyLogging (PL) already defined.
+         *                       PrettyLogging.StepProcessLogger filesSPL = PL.new StepProcessLogger("Loading file:", 3);
+         *
+         *                       // Usage in a loop
+         *                       for (int i = 0; i < 3; i++) {
+         *                           filesSPL.logAndIncrement();  // Logs and then increments step.
+         *                       }
+         *
+         *                       // Result logs
+         *                       [MyClass]: Loading file: 0/3
+         *                       [MyClass]: Loading file: 1/3
+         *                       [MyClass]: Loading file: 2/3
+         *                       }
+         *                   </pre>
+         * </p>
+         */
+        public void logAndIncrement() {
+            LOGGER.info(marker, "{} {}/{}", msg, currentStep.getAndIncrement(), totalSteps);
+        }
+    }
+
+    // Gets first marker of varargs or null marker.
+    private static Marker getMarker(Marker[] markers) {
+        return Arrays.stream(markers).toList().isEmpty() ? null : Arrays.stream(markers).toList().getFirst();
     }
 
     /**

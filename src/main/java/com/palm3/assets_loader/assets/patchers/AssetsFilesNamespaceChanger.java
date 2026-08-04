@@ -71,7 +71,7 @@ public class AssetsFilesNamespaceChanger {
      * </p>
      * @param packDirectory The directory containing the pack you want to modify the namespaces (the one with assets folder, the icon, etc.).
      * @param namespacesCouples A {@link List} of {@link NamespaceCouple} with the old and new namespaces couplers.
-     *                          To easily create one you can use {@link NamespaceCouple#createNamespacesList(List, List)}
+     *                          To easily create one you can use {@link NamespaceCouple#createMultipleCouplesList(List, List)}
      * @return A new instance of {@link AssetsFilesNamespaceChanger}.
      */
     public static AssetsFilesNamespaceChanger multipleNamespaces(Path packDirectory, List<NamespaceCouple> namespacesCouples) {
@@ -84,8 +84,8 @@ public class AssetsFilesNamespaceChanger {
      *     <b>NOTE:</b> Changes the files namespaces, the namespace folder inside the {@code assets} folder should already be the new one.
      *     <br>
      *     This will change the old namespace in the <b>files</b> to the new one.
-     *     So if whe have {@code my_pack_root/assets/newNamespace}
-     *     this will change all the files old namespaces ({@code oldNamespace}) in {@code newNamespace}.
+     *     So if whe have {@code my_pack_root/assets/newOrSameNamespace}
+     *     this will change all the files old namespaces ({@code oldNamespace}) in {@code newOrSameNamespace}.
      * </p>
      * @param packDirectory The directory containing the pack you want to modify the namespace  (the one with assets folder, the icon, etc.).
      * @param oldNamespace The old namespace to change.
@@ -152,7 +152,7 @@ public class AssetsFilesNamespaceChanger {
         repeatForCouples(namespaceCouple -> {
             Path modelsDir = assetsDirectory
                     // The new namespace is used in the directory (changed when copied), only the files have the old one.
-                    .resolve(namespaceCouple.newNamespace())
+                    .resolve(namespaceCouple.newOrSameNamespace())
                     .resolve("models");
 
             // Block models patch
@@ -160,7 +160,7 @@ public class AssetsFilesNamespaceChanger {
                 changeFilesNamespace(
                         modelsDir.resolve("block"),
                         namespaceCouple.oldNamespace(),
-                        namespaceCouple.newNamespace(),
+                        namespaceCouple.newOrSameNamespace(),
                         ".json"
                         );
             }
@@ -169,7 +169,7 @@ public class AssetsFilesNamespaceChanger {
                 changeFilesNamespace(
                         modelsDir.resolve("item"),
                         namespaceCouple.oldNamespace(),
-                        namespaceCouple.newNamespace(),
+                        namespaceCouple.newOrSameNamespace(),
                         ".json");
             }
             // Skipped, invalid
@@ -185,9 +185,9 @@ public class AssetsFilesNamespaceChanger {
     public void changeBlockStates() {
         repeatForCouples(namespaceCouple -> changeFilesNamespace(
                 // The new namespace is used in the directory (changed when copied), only the files have the old one.
-                assetsDirectory.resolve(namespaceCouple.newNamespace()).resolve("blockstates"),
+                assetsDirectory.resolve(namespaceCouple.newOrSameNamespace()).resolve("blockstates"),
                         namespaceCouple.oldNamespace(),
-                        namespaceCouple.newNamespace(),
+                        namespaceCouple.newOrSameNamespace(),
                 ".json"),
                 "blockstates"
         );
@@ -199,9 +199,9 @@ public class AssetsFilesNamespaceChanger {
     public void changeLang() {
         repeatForCouples(namespaceCouple -> changeFilesNamespace(
                 // The new namespace is used in the directory (changed when copied), only the files have the old one.                    
-                assetsDirectory.resolve(namespaceCouple.newNamespace()).resolve("lang"),
+                assetsDirectory.resolve(namespaceCouple.newOrSameNamespace()).resolve("lang"),
                         namespaceCouple.oldNamespace(),
-                        namespaceCouple.newNamespace(),
+                        namespaceCouple.newOrSameNamespace(),
                 ".json"),
                 "lang"
         );
@@ -212,9 +212,9 @@ public class AssetsFilesNamespaceChanger {
      */
     public void changeSounds() {
         repeatForCouples(namespaceCouple -> changeFilesNamespace(
-                assetsDirectory.resolve(namespaceCouple.newNamespace()),
+                assetsDirectory.resolve(namespaceCouple.newOrSameNamespace()),
                         namespaceCouple.oldNamespace(),
-                        namespaceCouple.newNamespace(),
+                        namespaceCouple.newOrSameNamespace(),
                 "sounds.json"),
                 "sounds"
         );
