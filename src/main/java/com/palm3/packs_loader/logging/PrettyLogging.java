@@ -251,6 +251,18 @@ public class PrettyLogging {
     }
 
     /**
+     * Logs additional conditional infos. No spaces are added.
+     * @param condition The condition to log the additional info.
+     * @param msg Base info, always logged.
+     * @param additionalMsg The additional info.
+     * @param marker Optional marker.
+     */
+    public void logAdditionalI(String baseMsg, boolean condition,  String additionalMsg, Marker... marker) {
+        String actualMsg = condition ? baseMsg + additionalMsg : baseMsg;
+        LOGGER.info(actualMsg, getMarker(marker));
+    }
+
+    /**
      * {@link StepProcessLogger} is used to log a loading process that is made of multiple phases.
      * After you create the class, the methods {@link StepProcessLogger#incrementAndLog()} and
      * {@link StepProcessLogger#logAndIncrement()} are used to log the steps.
