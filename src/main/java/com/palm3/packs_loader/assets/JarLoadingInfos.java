@@ -2,7 +2,7 @@ package com.palm3.packs_loader.assets;
 
 import com.mojang.logging.LogUtils;
 import com.palm3.packs_loader.PacksLoaderMain;
-import com.palm3.packs_loader.PrettyLogging;
+import com.palm3.packs_loader.logging.PrettyLogging;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;

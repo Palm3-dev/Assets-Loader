@@ -2,6 +2,7 @@ package com.palm3.packs_loader;
 
 import com.mojang.logging.LogUtils;
 import com.palm3.packs_loader.assets.*;
+import com.palm3.packs_loader.logging.PrettyLogging;
 import net.minecraft.network.chat.Component;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -13,7 +14,7 @@ import org.slf4j.Logger;
 import java.nio.file.Path;
 import java.util.List;
 
-import static com.palm3.packs_loader.PrettyLogging.DEF_EMPTY_LINE;
+import static com.palm3.packs_loader.logging.PrettyLogging.DEF_EMPTY_LINE;
 
 @Mod(PacksLoaderMain.MOD_ID)
 public class PacksLoaderMain {

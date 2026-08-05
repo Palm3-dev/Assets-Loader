@@ -1,6 +1,8 @@
 package com.palm3.packs_loader;
 
 import com.mojang.logging.LogUtils;
+import com.palm3.packs_loader.logging.Markers;
+import com.palm3.packs_loader.logging.PrettyLogging;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.event.lifecycle.FMLLoadCompleteEvent;
@@ -21,17 +23,14 @@ public class IncompatibleModsRemover {
     private static final PrettyLogging PL = new PrettyLogging(LogUtils.getLogger(), DEF_PL_PARAMS);
     public static final Path INCOMPATIBLE_JARS_DIR = MOD_DIR.resolve("incompatible_loader_jars");
     public static final List<String> UNSUPPORTED_JARS = new ArrayList<>();
-    private static final Marker INIT = MarkerFactory.getMarker("INIT");
-    private static final Marker SEARCH = MarkerFactory.getMarker("SEARCH");
-    private static final Marker MOVE = MarkerFactory.getMarker("MOVE");
     private static boolean eventAlreadyFired = false;
 
     static {
         try {
-            PL.logI("Creating directory for incompatible jars in mods folder.", INIT);
+            PL.logI("Creating directory for incompatible jars in mods folder.", Markers.INIT.marker);
             Files.createDirectories(INCOMPATIBLE_JARS_DIR);
         } catch (IOException e) {
-            PL.logE("Exception caught during 'incompatible_loader_jars' directory creation: " + e, INIT);
+            PL.logE("Exception caught during 'incompatible_loader_jars' directory creation: " + e, Markers.INIT.marker);
         }
     }
 
@@ -50,26 +49,26 @@ public class IncompatibleModsRemover {
     }
 
     protected static void searchIncompatibilities() {
-        PL.logI("Searching for incompatible loader mods.", INIT);
+        PL.logI("Searching for incompatible loader mods.", Markers.INIT.marker);
         FMLLoader.getLoadingModList().getModLoadingIssues().forEach(loadingIssue -> {
             if (loadingIssue.affectedPath() != null) {
                 String issuedFileString = loadingIssue.affectedPath().getFileName().toString();
                 switch (MOD_LOADER) {
                     case FORGE -> {
                         if (isInvalidForge(loadingIssue.translationKey())) {
-                            PL.logI("Found incompatible mod jar file (FABRIC/NEO): " + issuedFileString, SEARCH);
+                            PL.logI("Found incompatible mod jar file (FABRIC/NEO): " + issuedFileString, Markers.SEARCH.marker);
                             UNSUPPORTED_JARS.add(issuedFileString);
                         }
                     }
                     case NEOFORGE -> {
                         if (isInvalidNeo(loadingIssue.translationKey())) {
-                            PL.logI("Found incompatible mod jar file (FABRIC/FORGE): " + issuedFileString, SEARCH);
+                            PL.logI("Found incompatible mod jar file (FABRIC/FORGE): " + issuedFileString, Markers.SEARCH.marker);
                             UNSUPPORTED_JARS.add(issuedFileString);
                         }
                     }
                     case FABRIC -> {
                         if (isInvalidFabric()) {
-                            PL.logI("Found incompatible mod jar file (FORGE/NEO): " + issuedFileString, SEARCH);
+                            PL.logI("Found incompatible mod jar file (FORGE/NEO): " + issuedFileString, Markers.SEARCH.marker);
                             UNSUPPORTED_JARS.add(issuedFileString);
                         }
                     }
@@ -81,10 +80,10 @@ public class IncompatibleModsRemover {
     protected static void moveIncompatibilities() {
         UNSUPPORTED_JARS.forEach(jarFile -> {
             try {
-                PL.logI("Moving incompatible loader jar: '" + jarFile + "'", MOVE);
+                PL.logI("Moving incompatible loader jar: '" + jarFile + "'", Markers.MOVE.marker);
                 Files.move(MOD_DIR.resolve(jarFile), INCOMPATIBLE_JARS_DIR.resolve(jarFile));
             } catch (IOException e) {
-                PL.logE("Exception caught during incompatible file transfer in 'incompatible_loader_jars' directory: " + e, MOVE);
+                PL.logE("Exception caught during incompatible file transfer in 'incompatible_loader_jars' directory: " + e, Markers.MOVE.marker);
             }
         });
     }

@@ -2,7 +2,7 @@ package com.palm3.packs_loader.assets.patchers;
 
 import com.mojang.logging.LogUtils;
 import com.palm3.packs_loader.PacksLoaderMain;
-import com.palm3.packs_loader.PrettyLogging;
+import com.palm3.packs_loader.logging.PrettyLogging;
 import com.palm3.packs_loader.assets.AssetsLoader;
 import com.palm3.packs_loader.assets.NamespaceCouple;
 import org.jetbrains.annotations.NotNull;

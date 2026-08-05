@@ -1,6 +1,7 @@
-package com.palm3.packs_loader;
+package com.palm3.packs_loader.logging;
 
 import com.mojang.logging.LogUtils;
+import com.palm3.packs_loader.PacksLoaderMain;
 import org.slf4j.Logger;
 import org.slf4j.Marker;
 

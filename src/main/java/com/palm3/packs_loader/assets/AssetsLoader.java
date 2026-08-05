@@ -1,7 +1,8 @@
 package com.palm3.packs_loader.assets;
 
 import com.mojang.logging.LogUtils;
-import com.palm3.packs_loader.PrettyLogging;
+import com.palm3.packs_loader.logging.Markers;
+import com.palm3.packs_loader.logging.PrettyLogging;
 import com.palm3.packs_loader.assets.patchers.AssetsFilesNamespaceChanger;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.packs.*;
@@ -23,7 +24,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 import static com.palm3.packs_loader.PacksLoaderMain.*;
-import static com.palm3.packs_loader.PrettyLogging.*;
+import static com.palm3.packs_loader.logging.PrettyLogging.*;
 
 //todo finish the javadoc
 /**
@@ -36,9 +37,6 @@ import static com.palm3.packs_loader.PrettyLogging.*;
 @ParametersAreNonnullByDefault
 public class AssetsLoader {
     private static final PrettyLogging PL = new PrettyLogging(LogUtils.getLogger(), DEF_PL_PARAMS);
-    private static final Marker LOAD = MarkerFactory.getMarker("LOAD");
-    private static final Marker EXTRACT = MarkerFactory.getMarker("EXTRACT");
-    private static final Marker PATCH = MarkerFactory.getMarker("PATCH");
 
     private final String tempDirectory;
     private final Path tempDirectoryPath;
@@ -110,27 +108,27 @@ public class AssetsLoader {
 
         PL.logCenteredI("Loading pack '" + packInfos.packFolderName() + "' for mod '" + assetsLoader.loaderModName + "'", DEF_LINE);
 
-        PrettyLogging.StepProcessLogger jarsSPL = PL.new StepProcessLogger("Loading assets from mod jar file:", jarLoadingInfos.namespaceCouplesByJarFile().size(), EXTRACT);
+        PrettyLogging.StepProcessLogger jarsSPL = PL.new StepProcessLogger("Loading assets from mod jar file:", jarLoadingInfos.namespaceCouplesByJarFile().size(), Markers.EXTRACT.marker);
         jarLoadingInfos.namespaceCouplesByJarFile().forEach((modJarFile, namespaceCouples) -> {
             jarsSPL.incrementAndLog();
-            PrettyLogging.StepProcessLogger coupleSPL = PL.new StepProcessLogger("Mod jar file: '" + modJarFile + "', namespace couple:", namespaceCouples.size(), EXTRACT);
+            PrettyLogging.StepProcessLogger coupleSPL = PL.new StepProcessLogger("Mod jar file: '" + modJarFile + "', namespace couple:", namespaceCouples.size(), Markers.EXTRACT.marker);
 
             Path jarFilePath = MOD_DIR.resolve(modJarFile);
             for (NamespaceCouple namespaceCouple : namespaceCouples) {
                 coupleSPL.incrementAndLog("{" + namespaceCouple.toString() + "}");
 
                 Path assetsDestinationPath = packPath.resolve("assets").resolve(namespaceCouple.newOrSameNamespace());
-                copyAssetsFromJar(jarFilePath, assetsDestinationPath, namespaceCouple.oldNamespace(), jarLoadingInfos.forceCopyAssets(), jarLoadingInfos.logCopyOption(), EXTRACT);
+                copyAssetsFromJar(jarFilePath, assetsDestinationPath, namespaceCouple.oldNamespace(), jarLoadingInfos.forceCopyAssets(), jarLoadingInfos.logCopyOption(), Markers.EXTRACT.marker);
                 if (jarLoadingInfos.jarIconFile().iconJarFile().equals(modJarFile))
-                    copyJarIcon(jarFilePath, jarLoadingInfos.jarIconFile().iconFileName(), packPath, "pack", EXTRACT);
+                    copyJarIcon(jarFilePath, jarLoadingInfos.jarIconFile().iconFileName(), packPath, "pack", Markers.EXTRACT.marker);
             }
         });
 
-        PL.logI("Adding resourcepack with internal id '" + packInfos.packFolderName() + "' to game packs.", LOAD);
+        PL.logI("Adding resourcepack with internal id '" + packInfos.packFolderName() + "' to game packs.", Markers.LOAD.marker);
         event.addRepositorySource(packRepositorySource(packInfos.packFolderName(), packInfos.packTitle(), packInfos.packDescription(), packPath, packInfos.requiredPack()));
 
         if (packInfos.deletePack()) {
-            PL.logI("Pack will be deleted when game is closed.", LOAD);
+            PL.logI("Pack will be deleted when game is closed.", Markers.LOAD.marker);
             Runtime.getRuntime().addShutdownHook(new Thread(() -> deleteDirectory(assetsLoader.tempDirectory, false, assetsLoader.tempDirIsHidden)));
         }
 

@@ -3,15 +3,12 @@ package com.palm3.packs_loader.assets.patchers;
 import com.mojang.logging.LogUtils;
 import com.palm3.packs_loader.PacksLoaderMain;
 import com.palm3.packs_loader.ModLoader;
-import com.palm3.packs_loader.PrettyLogging;
-import org.apache.logging.log4j.core.util.Loader;
+import com.palm3.packs_loader.logging.PrettyLogging;
 
 import java.io.IOException;
-import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.EnumSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
