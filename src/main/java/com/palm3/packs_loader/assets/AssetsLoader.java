@@ -1,14 +1,12 @@
 package com.palm3.packs_loader.assets;
 
 import com.mojang.logging.LogUtils;
-import com.palm3.packs_loader.PacksLoaderMain;
 import com.palm3.packs_loader.PrettyLogging;
 import com.palm3.packs_loader.assets.patchers.AssetsFilesNamespaceChanger;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.packs.*;
 import net.minecraft.server.packs.repository.*;
 import net.minecraft.world.flag.FeatureFlagSet;
-import net.neoforged.fml.loading.FMLPaths;
 import net.neoforged.neoforge.event.AddPackFindersEvent;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
@@ -38,8 +36,6 @@ import static com.palm3.packs_loader.PrettyLogging.*;
 @ParametersAreNonnullByDefault
 public class AssetsLoader {
     private static final PrettyLogging PL = new PrettyLogging(LogUtils.getLogger(), DEF_PL_PARAMS);
-    private static final Path GAME_DIR = FMLPaths.GAMEDIR.get();
-    private static final Path MOD_DIR = FMLPaths.MODSDIR.get();
     private static final Marker LOAD = MarkerFactory.getMarker("LOAD");
     private static final Marker EXTRACT = MarkerFactory.getMarker("EXTRACT");
     private static final Marker PATCH = MarkerFactory.getMarker("PATCH");

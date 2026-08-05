@@ -7,9 +7,11 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.neoforged.fml.loading.FMLPaths;
 import net.neoforged.neoforge.event.AddPackFindersEvent;
 import org.slf4j.Logger;
 
+import java.nio.file.Path;
 import java.util.List;
 
 import static com.palm3.packs_loader.PrettyLogging.DEF_EMPTY_LINE;
@@ -19,6 +21,8 @@ public class PacksLoaderMain {
     public static final Logger LOGGER = LogUtils.getLogger();
     public static final PrettyLogging.DefaultPrettyLoggingParams DEF_PL_PARAMS = new PrettyLogging.DefaultPrettyLoggingParams(LOGGER, "-", 83, "-", 41);
     public static final PrettyLogging MAIN_PL = new PrettyLogging(DEF_PL_PARAMS);
+    public static final Path GAME_DIR = FMLPaths.GAMEDIR.get();
+    public static final Path MOD_DIR = FMLPaths.MODSDIR.get();
 
     // Mod infos
     public static final String MOD_ID = "assets_loader";
