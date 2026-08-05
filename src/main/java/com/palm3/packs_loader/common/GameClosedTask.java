@@ -21,6 +21,7 @@ public record GameClosedTask(Runnable task, boolean executeForCrashes, String ta
      * @param taskName The name of the task, to identify it. Giving reasonable and understandable names is recommended.
      */
     public GameClosedTask(Runnable task, boolean executeForCrashes, String taskName) {
+        PL.logI("Created new shutdown/crash task: " + taskName);
         this.task = task;
         this.executeForCrashes = executeForCrashes;
         this.taskName = taskName;
