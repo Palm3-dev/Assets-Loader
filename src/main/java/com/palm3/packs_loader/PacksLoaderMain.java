@@ -25,7 +25,7 @@ public class PacksLoaderMain {
     public static final Path MOD_DIR = FMLPaths.MODSDIR.get();
 
     // Mod infos
-    public static final String MOD_ID = "assets_loader";
+    public static final String MOD_ID = "packs_loader";
     public static final String MOD_VERSION = "1.0.0";
     public static final String DISCORD_LINK = "https://discord.com/invite/BuMv2f8epp";
     public static final ModLoader MOD_LOADER = ModLoader.NEOFORGE;
