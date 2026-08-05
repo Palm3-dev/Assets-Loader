@@ -117,6 +117,16 @@ public class PrettyLogging {
     }
 
     /**
+     * Logs an exception message as error.
+     * @param triedAction The string that should go after 'Exception caught during'.
+     * @param exception The appended exception.
+     * @param marker Optional marker.
+     */
+    public void logExceptionE(String triedAction, Exception exception, Marker... marker) {
+        LOGGER.error(getMarker(marker), "Exception caught during {}:{}", triedAction, exception);
+    }
+
+    /**
      * Simply logs a warn message.
      * @param msg The message to log.
      */
