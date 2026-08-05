@@ -1,6 +1,7 @@
 package com.palm3.packs_loader.assets;
 
 import com.mojang.logging.LogUtils;
+import com.palm3.packs_loader.common.CommonMethods;
 import com.palm3.packs_loader.logging.Markers;
 import com.palm3.packs_loader.logging.PrettyLogging;
 import com.palm3.packs_loader.assets.patchers.AssetsFilesNamespaceChanger;
@@ -10,7 +11,6 @@ import net.minecraft.server.packs.repository.*;
 import net.minecraft.world.flag.FeatureFlagSet;
 import net.neoforged.neoforge.event.AddPackFindersEvent;
 import org.slf4j.Marker;
-import org.slf4j.MarkerFactory;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -37,6 +37,7 @@ import static com.palm3.packs_loader.logging.PrettyLogging.*;
 @ParametersAreNonnullByDefault
 public class AssetsLoader {
     private static final PrettyLogging PL = new PrettyLogging(LogUtils.getLogger(), DEF_PL_PARAMS);
+    private static final CommonMethods.Logged CM = new CommonMethods.Logged(PL);
 
     private final String tempDirectory;
     private final Path tempDirectoryPath;
@@ -55,7 +56,7 @@ public class AssetsLoader {
         this.tempDirectory = tempDirectory;
         this.tempDirIsHidden = hidden;
         this.loaderModName = mod_id;
-        this.tempDirectoryPath = createDirectoryAndGetPath(this.tempDirectory, tempDirIsHidden);
+        this.tempDirectoryPath = CM.createDirectoryAndGetPath(this.tempDirectory, tempDirIsHidden);
     }
 
 
@@ -92,15 +93,17 @@ public class AssetsLoader {
      *     </pre>
      * </p>
      * @param event The {@link AddPackFindersEvent}.
-     * @param context An instance of {@link PackLoadingContext}.
+     * @param context An instance of {@link ResourcePackLoadingContext}.
      * @see JarLoadingInfos
      * @see ResourcePackInfos
-     * @see PackLoadingContext
+     * @see ResourcePackLoadingContext
      * @see net.neoforged.fml.common.Mod
      * @see net.neoforged.bus.api.SubscribeEvent
      * @see AddPackFindersEvent
      */
-    public static void loadPack(AddPackFindersEvent event, PackLoadingContext context) {
+    public static void loadPack(AddPackFindersEvent event, ResourcePackLoadingContext context) {
+        if (event.getPackType() != PackType.CLIENT_RESOURCES)
+            return;
         AssetsLoader assetsLoader = context.assetsLoader();
         JarLoadingInfos jarLoadingInfos = context.jarLoadingInfos();
         ResourcePackInfos packInfos = context.packInfos();
@@ -129,7 +132,7 @@ public class AssetsLoader {
 
         if (packInfos.deletePack()) {
             PL.logI("Pack will be deleted when game is closed.", Markers.LOAD.marker);
-            Runtime.getRuntime().addShutdownHook(new Thread(() -> deleteDirectory(assetsLoader.tempDirectory, false, assetsLoader.tempDirIsHidden)));
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> CM.deleteDirectory(assetsLoader.tempDirectory, false, assetsLoader.tempDirIsHidden)));
         }
 
         PL.logCenteredI("Pack '" + packInfos.packFolderName() + "' loading complete!", DEF_LINE);
@@ -156,7 +159,7 @@ public class AssetsLoader {
         modJarFile = modJarFile.endsWith(".jar") ? modJarFile : modJarFile + ".jar";
 
         Path jarFilePath = MOD_DIR.resolve(modJarFile);
-        Path packPath = createDirectoryAndGetPath(tempDirectory, hidden).resolve(packInfos.packFolderName());
+        Path packPath = CM.createDirectoryAndGetPath(tempDirectory, hidden).resolve(packInfos.packFolderName());
         Path assetsDestinationPath = packPath.resolve("assets").resolve(newNamespace == null ? jarAssetsNamespace : newNamespace);
 
         PL.logI("Starting assets loading process ->");
@@ -171,7 +174,7 @@ public class AssetsLoader {
 
         if (packInfos.deletePack()) {
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                deleteDirectory(tempDirectory + File.separator + packInfos.packFolderName(), true, hidden);
+                CM.deleteDirectory(tempDirectory + File.separator + packInfos.packFolderName(), true, hidden);
             }));
         }
     }
@@ -180,74 +183,6 @@ public class AssetsLoader {
 
 
     //================== STATICS - LOADING PROCESS PARTS =====================
-    /**
-     * Creates a directory inside the game folder {@code .minecraft}.
-     * @param directory The directory you want to create, can also be a path.
-     *                  E.g. {@code assets/temp}. Don't insert points in the path/folder name, they will get deleted.
-     * @param hidden If the directory should be hidden. If you're using a path, only the first (highest) directory of the path will be hidden.
-     *               <br>E.g. in {@code assets/temp} only the {@code assets} directory will be hidden (and also renamed {@code .assets}).
-     */
-    public static Path createDirectoryAndGetPath(String directory, boolean hidden) {
-        if (directory.contains(".")) directory = directory.replace(".", "");
-        Path dir = hidden ? GAME_DIR.resolve("." + directory) : GAME_DIR.resolve(directory);
-
-        if (!Files.exists(dir)) {
-            PL.logI("Creating directory '" + directory + "' inside game folder...");
-
-            try {
-                Files.createDirectories(dir);
-                PL.logI("Created directory " + dir);
-
-                if (hidden) {
-                    if (System.getProperty("os.name").toLowerCase().contains("win") && Files.getAttribute(dir, "dos:hidden") == (Boolean) false) {
-                        Files.setAttribute(dir, "dos:hidden", true);
-                        PL.logI("Windows detected. Applied attributes 'dos:hidden' to directory '" + GAME_DIR.relativize(dir) + "'");
-                    } else if (Files.getAttribute(dir, "dos:hidden") == (Boolean) true) {
-                        PL.logI("Windows detected. Attribute 'dos:hidden' of directory '" + GAME_DIR.relativize(dir) + "' already 'true'");
-                    }
-                }
-            } catch (IOException e) {
-                PL.logE("Exception caught during directory creation: " + e);
-            }
-        } else {
-            PL.logI("Directory '" + directory + "' already present in game folder...");
-        }
-        return dir;
-    }
-
-    /**
-     * Deletes a directory inside the game folder {@code .minecraft}.
-     * @param directory The directory you want to delete, can also be a path.
-     *                  E.g. {@code assets/temp}. Don't insert points in the path/folder name, they will get deleted.
-     * @param deleteItself If you want to also delete the directory itself instead of the content only.
-     * @param hidden If the directory is hidden (the name should also begin with '.').
-     */
-    public static void deleteDirectory(String directory, boolean deleteItself, boolean hidden) {
-        if (directory.contains(".")) directory = directory.replace(".", "");
-        Path dir = hidden ? GAME_DIR.resolve("." + directory) : GAME_DIR.resolve(directory);
-
-        PL.logI("Deleting directory " + directory, 1, LogPos.BEFORE);
-
-        if (Files.exists(dir)) {
-            try (Stream<Path> pathStream = Files.walk(dir)) {
-                pathStream.sorted(Comparator.reverseOrder()).forEach(path -> {
-                    try {
-                        if (deleteItself) Files.deleteIfExists(path);
-                        else if (!path.equals(dir)) Files.deleteIfExists(path);
-                    } catch (IOException e) {
-                        PL.logE("Exception caught during file/directory delete. Path: " + dir + " Exception: " + e);
-                    }
-                });
-                if (deleteItself) PL.logI("Deleted directory '" + GAME_DIR.getParent().relativize(dir) + "' and its content.");
-                else PL.logI("Deleted directory '" + GAME_DIR.getParent().relativize(dir) + "' content.");
-            } catch (IOException e) {
-                PL.logE("Error during directory files walk. Exception: " + e);
-            }
-        } else {
-            PL.logI("Folder '" + GAME_DIR.getParent().relativize(dir) + "' does not exist, nothing to delete.");
-        }
-    }
-
     /**
      * Creates a {@link Pack} to be used in the {@link AddPackFindersEvent}.
      * @param internalPackId The game internal id of the pack. You will never see this, but remember to avoid creating duplicates.

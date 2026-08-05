@@ -6,4 +6,4 @@ package com.palm3.packs_loader.assets;
  * @param jarLoadingInfos The {@link JarLoadingInfos} instance, representing all the jar and pack loader infos (icon, jar files, namespaces).
  * @param packInfos The {@link ResourcePackInfos} instance, containing the final pack infos.
  */
-public record PackLoadingContext(AssetsLoader assetsLoader, JarLoadingInfos jarLoadingInfos, ResourcePackInfos packInfos) {}
+public record ResourcePackLoadingContext(AssetsLoader assetsLoader, JarLoadingInfos jarLoadingInfos, ResourcePackInfos packInfos) {}
