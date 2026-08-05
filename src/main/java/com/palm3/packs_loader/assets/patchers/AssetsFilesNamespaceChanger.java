@@ -7,8 +7,8 @@ import com.palm3.packs_loader.assets.AssetsLoader;
 import com.palm3.packs_loader.assets.NamespaceCouple;
 import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -54,7 +54,7 @@ public class AssetsFilesNamespaceChanger {
     private final @NotNull Path assetsDirectory;
     private final @NotNull List<NamespaceCouple> namespacesCouples;
 
-    private AssetsFilesNamespaceChanger(Path packDirectory, List<NamespaceCouple> namespacesCouples) {
+    protected AssetsFilesNamespaceChanger(Path packDirectory, List<NamespaceCouple> namespacesCouples) {
         this.assetsDirectory = packDirectory.resolve("assets");
         this.namespacesCouples = namespacesCouples;
     }
@@ -70,7 +70,7 @@ public class AssetsFilesNamespaceChanger {
      *     in {@code newNamespace_A} and {@code newNamespace_B} respectively.
      * </p>
      * @param packDirectory The directory containing the pack you want to modify the namespaces (the one with assets folder, the icon, etc.).
-     * @param namespacesCouples A {@link List} of {@link NamespaceCouple} with the old and new namespaces couplers.
+     * @param namespacesCouples A {@link List} of {@link NamespaceCouple} with the old and new namespaces couples.
      *                          To easily create one you can use {@link NamespaceCouple#createMultipleCouplesList(List, List)}
      * @return A new instance of {@link AssetsFilesNamespaceChanger}.
      */
@@ -84,12 +84,13 @@ public class AssetsFilesNamespaceChanger {
      *     <b>NOTE:</b> Changes the files namespaces, the namespace folder inside the {@code assets} folder should already be the new one.
      *     <br>
      *     This will change the old namespace in the <b>files</b> to the new one.
-     *     So if whe have {@code my_pack_root/assets/newOrSameNamespace}
-     *     this will change all the files old namespaces ({@code oldNamespace}) in {@code newOrSameNamespace}.
+     *     So if whe have {@code my_pack_root/assets/newNamespace}
+     *     this will change all the files old namespaces ({@code oldNamespace}) in {@code newNamespace}.
      * </p>
      * @param packDirectory The directory containing the pack you want to modify the namespace  (the one with assets folder, the icon, etc.).
      * @param oldNamespace The old namespace to change.
      * @param newNamespace The new namespace that will replace the old one.
+     * @return A new instance of {@link AssetsFilesNamespaceChanger}.
      */
     public static AssetsFilesNamespaceChanger singleNamespace(Path packDirectory, String oldNamespace, String newNamespace) {
         List<NamespaceCouple> namespacesCouples = new ArrayList<>();
@@ -97,51 +98,49 @@ public class AssetsFilesNamespaceChanger {
         return new AssetsFilesNamespaceChanger(packDirectory, namespacesCouples);
     }
 
-    // Replaces all the old namespace occurrences in the given file with the new namespace. targetDir used only for logs.
-    protected static void processFile(Path targetDirectory, Path file, String oldNamespace, String newNamespace) {
+    // Replaces all the old namespace occurrences in the given file with the new namespace.
+    protected static void processFile(Path filePath, String oldNamespace, String newNamespace) {
         try {
-            String fileAsString = Files.readString(file);
-            if (fileAsString.contains(oldNamespace)) {
-                PL.logI("Found file with old namespace: '" + targetDirectory.relativize(file) + "'.");
+            String fileAsString = Files.readString(filePath);
+            if ((!oldNamespace.equals("forge") || (newNamespace.equals("neoforge") && !fileAsString.contains("neoforge"))) && fileAsString.contains(oldNamespace)) {
+                PL.logI("Found file with old namespace: '" + filePath.getFileName() + "'.");
                 fileAsString = fileAsString.replace(oldNamespace, newNamespace);
-                Files.writeString(file, fileAsString);
+                Files.writeString(filePath, fileAsString);
             }
         } catch (IOException e) {
             PL.logE("Exception caught during file read/write: " + e);
         }
     }
 
-    // Changes the namespace of all the files in the given dir. Extension can be a file.
+    // Changes the namespace of all the files in the given dir. Extension can be a file or path e.g. my_cool/path/file.json and whole searched path will have to end with that.
     @SuppressWarnings("all")
-    protected static void changeFilesNamespace(Path targetDirectory, String oldNamespace, String newNamespace, @Nullable String... fileExtensions) {
-        try (Stream<Path> stream = Files.walk(targetDirectory)) {
+    protected static void changeFilesNamespace(Path targetFilesDirectory, String oldNamespace, String newNamespace, String... fileExtensions) {
+        try (Stream<Path> stream = Files.walk(targetFilesDirectory)) {
             stream.filter(Files::isRegularFile)
                     .filter(path -> {
-                        if (fileExtensions == null) return true;  // Any extension
+                        if (fileExtensions.length == 0) return true;  // Any extension
                         for (String fileExtension : fileExtensions) {
                             if (path.toString().endsWith(fileExtension)) return true;  // Extension of current file is in filters array
-                            return false;  // Doesn't match
+                            //return false;  // Doesn't match  // I have the feeling this explodes things a bit. Doesn't check all if first doesn't match, right? Yhyh, 90% sure
                         }
-                        return false;  // Doesn't match, maybe explodes? idk
+                        return false;
                     })
-                    .forEach(path -> processFile(targetDirectory, path, oldNamespace, newNamespace));
+                    .forEach(path -> processFile(path, oldNamespace, newNamespace));
         } catch (IOException e) {
             PL.logE("Exception caught during files walk: " + e);
         }
     }
 
     // Repeats given consumer for every existing couple of namespaces. Logs shit.
-    private void repeatForCouples(Consumer<NamespaceCouple> consumer, String fileTypeForLogs) {
-        if (!fileTypeForLogs.endsWith("s")) fileTypeForLogs += "s";
-        PL.logCenteredI("Changing " + fileTypeForLogs + " namespace", PL.line2, true, true);
+    private void repeatForCouples(Consumer<NamespaceCouple> consumer, AssetType fileTypeForLogs) {
+        PL.logCenteredI("Changing " + fileTypeForLogs + " namespace", PL.line2);
 
         for (NamespaceCouple namespaceCouple : namespacesCouples) {
             consumer.accept(namespaceCouple);
         }
 
-        PL.logCenteredI("Done", PL.line2, true, true);
+        PL.logCenteredI("Done", PL.line2);
         PL.logSpaceI();
-
     }
 
     /**
@@ -158,7 +157,7 @@ public class AssetsFilesNamespaceChanger {
             // Block models patch
             if (assetType.isBlockModel()) {
                 changeFilesNamespace(
-                        modelsDir.resolve("block"),
+                        ModelsChanger.getBlockModelsDir(modelsDir),
                         namespaceCouple.oldNamespace(),
                         namespaceCouple.newOrSameNamespace(),
                         ".json"
@@ -167,7 +166,7 @@ public class AssetsFilesNamespaceChanger {
             // Item models patch
             if (assetType.isItemModel()) {
                 changeFilesNamespace(
-                        modelsDir.resolve("item"),
+                        ModelsChanger.getItemModelsDir(modelsDir),
                         namespaceCouple.oldNamespace(),
                         namespaceCouple.newOrSameNamespace(),
                         ".json");
@@ -176,7 +175,7 @@ public class AssetsFilesNamespaceChanger {
             if (!assetType.isModel()) {
                 PL.logW("Tried to change models, but specified change is " + assetType + ", skipping.");
             }
-        }, "model");
+        }, assetType);
     }
 
     /**
@@ -189,7 +188,7 @@ public class AssetsFilesNamespaceChanger {
                         namespaceCouple.oldNamespace(),
                         namespaceCouple.newOrSameNamespace(),
                 ".json"),
-                "blockstates"
+                AssetType.BLOCK_STATE
         );
     }
 
@@ -203,7 +202,7 @@ public class AssetsFilesNamespaceChanger {
                         namespaceCouple.oldNamespace(),
                         namespaceCouple.newOrSameNamespace(),
                 ".json"),
-                "lang"
+                AssetType.LANG
         );
     }
 
@@ -215,8 +214,8 @@ public class AssetsFilesNamespaceChanger {
                 assetsDirectory.resolve(namespaceCouple.newOrSameNamespace()),
                         namespaceCouple.oldNamespace(),
                         namespaceCouple.newOrSameNamespace(),
-                "sounds.json"),
-                "sounds"
+                        File.separator + "sounds.json"),
+                AssetType.SOUNDS
         );
     }
 
