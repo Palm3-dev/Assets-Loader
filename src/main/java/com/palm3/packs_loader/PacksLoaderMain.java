@@ -6,7 +6,6 @@ import net.minecraft.network.chat.Component;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.Mod;
-import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.fml.loading.FMLPaths;
 import net.neoforged.neoforge.event.AddPackFindersEvent;
 import org.slf4j.Logger;
@@ -40,6 +39,7 @@ public class PacksLoaderMain {
 
         // Do actual stuff
         modEventBus.addListener(PacksLoaderMain::packFindersEvent);
+        modEventBus.addListener(IncompatibleModsRemover::loadCompleteEvent);
     }
 
 
