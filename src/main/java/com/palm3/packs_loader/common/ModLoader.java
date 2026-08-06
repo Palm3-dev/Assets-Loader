@@ -1,4 +1,4 @@
-package com.palm3.packs_loader;
+package com.palm3.packs_loader.common;
 
 /// Represents a mod loader.
 public enum ModLoader {

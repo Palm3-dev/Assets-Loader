@@ -2,7 +2,7 @@ package com.palm3.packs_loader.assets.patchers;
 
 import com.mojang.logging.LogUtils;
 import com.palm3.packs_loader.PacksLoaderMain;
-import com.palm3.packs_loader.ModLoader;
+import com.palm3.packs_loader.common.ModLoader;
 import com.palm3.packs_loader.logging.PrettyLogging;
 
 import java.io.IOException;

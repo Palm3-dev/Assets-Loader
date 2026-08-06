@@ -1,4 +1,4 @@
-package com.palm3.packs_loader;
+package com.palm3.packs_loader.common;
 
 import com.mojang.logging.LogUtils;
 import com.palm3.packs_loader.logging.Markers;
@@ -7,8 +7,6 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.neoforged.fml.loading.FMLLoader;
-import org.slf4j.Marker;
-import org.slf4j.MarkerFactory;
 
 import java.io.IOException;
 import java.nio.file.Files;
