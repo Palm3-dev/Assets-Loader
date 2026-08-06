@@ -193,6 +193,7 @@ public class AssetsLoader {
      * @return The {@link Pack}.
      * @throws RuntimeException If the method fails creating a {@link PathPackResources}.
      */
+    @Deprecated(forRemoval = true)
     public static Pack createPack(String internalPackId, Component packTitle, Component packDescription, Path packPath, boolean required) throws RuntimeException {
         PackLocationInfo packLocationInfo = new PackLocationInfo(
                 internalPackId,
@@ -227,6 +228,7 @@ public class AssetsLoader {
      * @return The pack as a {@link RepositorySource} ready to be loaded.
      * @throws RuntimeException If the pack creation fails.
      */
+    @Deprecated(forRemoval = true)
     public static RepositorySource packRepositorySource(String internalPackId, Component packTitle, Component packDescription, Path packPath, boolean required) throws RuntimeException {
         return packConsumer -> packConsumer.accept(createPack(internalPackId, packTitle, packDescription, packPath, required));
     }
@@ -243,6 +245,7 @@ public class AssetsLoader {
      * @see LogCopyOption
      */
     // Holy nested method, warning provided.
+    @Deprecated(forRemoval = true)
     public static void copyAssetsFromJar(Path jarFilePath, Path filesDestinationPath, String namespaceToCopy, boolean forceCopy, LogCopyOption logCopyOption, Marker... marker) {
         try (FileSystem jarFileSystem = FileSystems.newFileSystem(jarFilePath, (ClassLoader) null)) {
             PL.logI("Creating jar file system...", marker);
@@ -332,6 +335,7 @@ public class AssetsLoader {
      * @param newIconFileName The new icon file name. If {@code null} it will remain the old one given in 'iconFileName'.
      * @param marker Optional logger marker.
      */
+    @Deprecated(forRemoval = true)
     public static void copyJarIcon(Path jarFilePath, String iconFileName, Path iconDestinationFolderPath, @Nullable String newIconFileName, Marker... marker) {
         try (FileSystem jarFileSystem = FileSystems.newFileSystem(jarFilePath)) {
             String iconFile = iconFileName;
@@ -367,6 +371,7 @@ public class AssetsLoader {
      * @param moreDebug If more debug infos on the icon file you're trying to copy should be printed.
      *                   <br>It's here for testing purposes only, should always be set false when you're sure the copy works.
      */
+    @Deprecated(forRemoval = true)
     public static void copyPngIcon(Path iconPath, Path iconDestinationFolderPath, @Nullable String newIconFileName, boolean moreDebug) {
         if (moreDebug) {
             PL.logI("Debug infos about the icon file you're trying to copy:");
@@ -393,6 +398,7 @@ public class AssetsLoader {
         }
     }
 
+    @Deprecated
     public enum LogCopyOption {
         ALWAYS_LOG,
         LOG_NONEXISTENT,

@@ -15,11 +15,13 @@ import static com.palm3.packs_loader.PacksLoaderMain.*;
  * Provides common methods for directory, pack creation and others. The class has been instantiated due to
  * the need of knowing which class is calling these methods, otherwise always shown as [co.pa.pa.co.CommonMethods/]:
  */
+@Deprecated(forRemoval = true)
 public class CommonMethods {
     /**
      * Contains various static utility methods that don't log anything, and thus can be used without logger instance. All method throw {@link RuntimeException}
      * if something fails, since there's no logger to log the exceptions.
      */
+    @Deprecated(forRemoval = true)
     public static class Unlogged {
         /**
          * Creates a directory inside the game folder {@code .minecraft}.
@@ -29,6 +31,7 @@ public class CommonMethods {
          *               <br>E.g. in {@code assets/temp} only the {@code assets} directory will be hidden (and also renamed {@code .assets}).
          * @throws RuntimeException If the directory creation fails.
          */
+        @Deprecated(forRemoval = true)
         public static Path createDirectoryAndGetPath(String directory, boolean hidden) {
             if (directory.contains(".")) directory = directory.replace(".", "");
             Path dir = hidden ? GAME_DIR.resolve("." + directory) : GAME_DIR.resolve(directory);
@@ -54,6 +57,7 @@ public class CommonMethods {
          * @param hidden If the directory is hidden (the name should also begin with '.').
          * @throws RuntimeException If the directory/file deletion fails or files walk fails.
          */
+        @Deprecated(forRemoval = true)
         public static void deleteDirectory(String directory, boolean deleteItself, boolean hidden) {
             if (directory.contains(".")) directory = directory.replace(".", "");
             Path dir = hidden ? GAME_DIR.resolve("." + directory) : GAME_DIR.resolve(directory);
@@ -80,6 +84,7 @@ public class CommonMethods {
      * Contains various utility methods. The class is instantiated to let it have a {@link PrettyLogging} instance used for all methods.
      * Unless specified, methods don't throw exceptions, they log them as errors.
      */
+    @Deprecated(forRemoval = true)
     public static class Logged {
         private final PrettyLogging pl;
 
@@ -87,6 +92,7 @@ public class CommonMethods {
          * Construct an instance of this class.
          * @param prettyLogging The pretty logging instance of the class you're using these methods in.
          */
+        @Deprecated(forRemoval = true)
         public Logged(PrettyLogging prettyLogging) {
             pl = prettyLogging;
         }
@@ -98,6 +104,7 @@ public class CommonMethods {
          * @param hidden If the directory should be hidden. If you're using a path, only the first (highest) directory of the path will be hidden.
          *               <br>E.g. in {@code assets/temp} only the {@code assets} directory will be hidden (and also renamed {@code .assets}).
          */
+        @Deprecated(forRemoval = true)
         public Path createDirectoryAndGetPath(String directory, boolean hidden) {
             if (directory.contains(".")) directory = directory.replace(".", "");
             Path dir = hidden ? GAME_DIR.resolve("." + directory) : GAME_DIR.resolve(directory);
@@ -130,6 +137,7 @@ public class CommonMethods {
          * @param deleteItself If you want to also delete the directory itself instead of the content only.
          * @param hidden If the directory is hidden (the name should also begin with '.').
          */
+        @Deprecated(forRemoval = true)
         public void deleteDirectory(String directory, boolean deleteItself, boolean hidden) {
             if (directory.contains(".")) directory = directory.replace(".", "");
             Path dir = hidden ? GAME_DIR.resolve("." + directory) : GAME_DIR.resolve(directory);
