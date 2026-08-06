@@ -75,8 +75,9 @@ public class FilesCopier {
     /**
      * Creates a directory inside the game folder.
      * @param directory The directory or path of directories you want to create. To create a path correctly see {@link FilesCopier#makeDirectory(String, String...)}.
+     * @return The path of the created directory.
      */
-    public void createDirectory(String directory) {
+    public Path createDirectoryAndGetPath(String directory) {
         Path dir = GAME_DIR.resolve(directory);
         if (!Files.exists(dir)) {
             pl.logI("Creating directory '" + GAME_DIR.relativize(dir) + "' inside game folder.");
@@ -89,6 +90,7 @@ public class FilesCopier {
         } else {
             pl.logI("Directory '" + GAME_DIR.relativize(dir) + "' already exists in game folder, skipping creation.");
         }
+        return dir;
     }
 
     /**
