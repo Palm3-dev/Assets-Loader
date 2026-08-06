@@ -4,12 +4,15 @@ import com.mojang.logging.LogUtils;
 import com.palm3.packs_loader.PacksLoaderMain;
 import com.palm3.packs_loader.logging.PrettyLogging;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
 /**
  * This record is used to add a shutdown task to Minecraft.
  * @param task The task you want to execute.
  * @param executeForCrashes If the task should be also executed when the game crashes.
  * @param taskName The name of the task, to identify it. Giving reasonable and understandable names is recommended.
  */
+@ParametersAreNonnullByDefault
 public record GameClosedTask(Runnable task, boolean executeForCrashes, String taskName) {
 
     private static final PrettyLogging PL = new PrettyLogging(LogUtils.getLogger(), PacksLoaderMain.DEF_PL_PARAMS);
