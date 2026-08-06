@@ -2,6 +2,7 @@ package com.palm3.packs_loader.assets;
 
 import com.mojang.logging.LogUtils;
 import com.palm3.packs_loader.common.CommonMethods;
+import com.palm3.packs_loader.common.FilesCopier;
 import com.palm3.packs_loader.logging.Markers;
 import com.palm3.packs_loader.logging.PrettyLogging;
 import com.palm3.packs_loader.assets.patchers.AssetsFilesNamespaceChanger;
@@ -38,25 +39,30 @@ import static com.palm3.packs_loader.logging.PrettyLogging.*;
 public class AssetsLoader {
     private static final PrettyLogging PL = new PrettyLogging(LogUtils.getLogger(), DEF_PL_PARAMS);
     private static final CommonMethods.Logged CM = new CommonMethods.Logged(PL);
+    private static final FilesCopier COPIER = new FilesCopier(PL);
 
     private final String tempDirectory;
     private final Path tempDirectoryPath;
-    private final boolean tempDirIsHidden;
+    private final boolean tempDirIsHidden = true;
     private final String loaderModName;  // Mod name?
 
     /**
      * Used to create an instance of {@link AssetsLoader}. The class should be something like this:
-     * <pre>{@code public static final AssetsLoader LOADER =  AssetsLoader.newAssetLoader(".temp_assets", true, Main.MOD_ID);}</pre>
+     * <pre>
+     *     {@code
+     *      // If the directory starts with a point it will be hidden.
+     *      public static final AssetsLoader LOADER =  AssetsLoader.newAssetLoader(Main.MOD_ID, ".temp_assets");
+     *     }
+     * </pre>
      * <br><b>IMPORTANT:</b> only one instance of this class should be created for your mod, unless you have specific requirements, obviously.
-     * @param tempDirectory The temporary directory where all the loading processes and loading files will happen.
-     * @param hidden If the temporary directory should be hidden.
      * @param mod_id The mod id of <b>your</b> mod.
+     * @param tempDirectory The temporary directory where all the loading processes and loading files will happen.
      */
-    public AssetsLoader(String tempDirectory, boolean hidden, String mod_id) {
+    public AssetsLoader(String mod_id, String tempDirectory) {
         this.tempDirectory = tempDirectory;
-        this.tempDirIsHidden = hidden;
         this.loaderModName = mod_id;
-        this.tempDirectoryPath = CM.createDirectoryAndGetPath(this.tempDirectory, tempDirIsHidden);
+        tempDirectoryPath = Path.of("diocane-faah");
+        //this.tempDirectoryPath = COPIER.createDirectoryAndGetPath(this.tempDirectory);
     }
 
 

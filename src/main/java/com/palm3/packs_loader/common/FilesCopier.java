@@ -1,6 +1,8 @@
 package com.palm3.packs_loader.common;
 
 import com.palm3.packs_loader.logging.PrettyLogging;
+import net.minecraft.Util;
+import org.lwjgl.system.Platform;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -25,6 +27,14 @@ public class FilesCopier {
     }
 
     /**
+     * @return {@code true} if the Minecraft (and the JVM) are running on a Windows OS machine.
+     */
+    @SuppressWarnings("all")  // Shut up, i know it's inverted.
+    public static boolean isOnWindows() {
+        return Util.getPlatform() == Util.OS.WINDOWS;
+    }
+
+    /**
      * Represents an option for copy logs.
      */
     public enum LogCopyOption {
@@ -45,77 +55,117 @@ public class FilesCopier {
     }
 
     /**
-     * Sets the given file or directory to hidden (on Windows).
-     * @param fileOrDirectory The directory or file path.
+     * If on Windows OS, applies attribute {@code dos:hidden} to the given file or directory.
+     * If the file/directory name doesn't start with {@code .} it does nothing.
      */
-    public void setHidden(Path fileOrDirectory) {
+    protected void applyDosHidden(Path fileOrDirectory) {
+        if (!fileOrDirectory.getFileName().toString().startsWith(".") || !isOnWindows()) return;
         try {
-            pl.logI("Setting directory/file '" + fileOrDirectory.getFileName() + "' hidden.");
             DosFileAttributeView dosView = Files.getFileAttributeView(fileOrDirectory, DosFileAttributeView.class);
-            dosView.setHidden(true);
+            if (dosView == null) return;
+            if (!dosView.readAttributes().isHidden()) {
+                pl.logI("Setting directory/file '" + fileOrDirectory.getFileName() + "' hidden.");
+                dosView.setHidden(true);
+            } else {
+                pl.logI("Directory/file " + fileOrDirectory.getFileName() + "' already is hidden.");
+            }
         } catch (IOException e) {
             pl.logExceptionE("path attributes setting", e);
         }
     }
 
+
     /**
-     * Used to assemble a directory path.
-     * @param first The first directory of the path.
-     * @param others Other optional directories.
-     * @return a directory path as {@link String} with correct file separators.
+     * If on Windows OS, it finds and hides all the directories and files in the path starting from the game directory that should be hidden
+     * (this means that the directory/file name needs to start with {@code .}).
+     * @param path The path you want to hide (itself and content).
+     * @param hideFiles If files should be made hidden.
+     * @param hideContentIfDirectory If the given path is a directory, defines if the subdirectories and
+     *                               files (only made hidden if hideFiles is {@code true}) of that path should be also set hidden.
+     *                               If the given path is not a directory, this value is ignored.
      */
-    public static String makeDirectory(String first, String... others) {
-        StringBuilder actualDir = new StringBuilder(first);
-        for (String other : others) {
-            actualDir.append(File.separator).append(other);
+    public void setHiddenFromGameDir(Path path, boolean hideFiles, boolean hideContentIfDirectory) {
+        if (!isOnWindows()) {
+            pl.logI("Non-windows machine, skipping 'dos:hidden' attribute setting.");
+            return;
         }
-        return actualDir.toString();
+
+        Path absolutePath = path.isAbsolute() ? path : GAME_DIR.resolve(path);
+        Path gameRelativePath = GAME_DIR.relativize(absolutePath);
+
+        // Hides directories (and file if present and with permission 'hideFiles = true') of the given path.
+        Path target = GAME_DIR;
+        for (int i = 0; i < gameRelativePath.getNameCount(); i++) {
+            target = target.resolve(gameRelativePath.getName(i));
+            if ((hideFiles && (Files.isDirectory(target) || Files.isRegularFile(target))) || Files.isDirectory(target))
+                applyDosHidden(target);
+        }
+
+        // Hides all subdirectories (and subfiles if with permission 'hideFiles = true') of the path.
+        if (Files.isDirectory(absolutePath) && hideContentIfDirectory) {
+            pl.logI("Hiding directory '" + GAME_DIR.relativize(absolutePath) + "' content.");
+            try (Stream<Path> pathStream = Files.walk(absolutePath)) {
+                pathStream.forEach(p -> {
+                    if ((hideFiles && (Files.isDirectory(p) || Files.isRegularFile(p))) || Files.isDirectory(p))
+                        applyDosHidden(p);
+                });
+            } catch (IOException e) {
+                pl.logExceptionE("path '" + absolutePath + "' files walk to make them hidden", e);
+            }
+        }
     }
 
     /**
      * Creates a directory inside the game folder.
-     * @param directory The directory or path of directories you want to create. To create a path correctly see {@link FilesCopier#makeDirectory(String, String...)}.
-     * @return The path of the created directory.
+     * @param directory The directory path <b>inside the game folder.</b> You should pass a non-absolute {@link Path}, so that it
+     *                  gets resolved against the game dir {@link net.neoforged.fml.loading.FMLPaths#GAMEDIR}.
+     *                  <b>If it is absolute,</b> it should already be a path that ends inside the game folder.
+     * @param hideContent If {@code null} the given directory will be set hidden only if it doesn't already exist
+     *                    (so usually only the first time the method gets called unless the directory gets deleted or others).
+     *                    On the other hand, if it's not null, the directory will be set hidden every time the method gets called.
+     *                    When not null, the value of this {@link Boolean} is used to determine if the content of the given directory
+     *                    should be also set hidden; this every time the method gets called, remember.
+     *
      */
-    public Path createDirectoryAndGetPath(String directory) {
-        Path dir = GAME_DIR.resolve(directory);
-        if (!Files.exists(dir)) {
-            pl.logI("Creating directory '" + GAME_DIR.relativize(dir) + "' inside game folder.");
+    public void createDirectory(Path directory, @Nullable Boolean hideContent) {
+        Path absoluteDirectory = directory.isAbsolute() ? directory : GAME_DIR.resolve(directory);
+        if (!Files.exists(absoluteDirectory)) {
+            pl.logI("Creating directory '" + GAME_DIR.relativize(absoluteDirectory) + "' inside game folder.");
             try {
-                Files.createDirectories(dir);
-                if (directory.startsWith(".")) setHidden(dir);
+                Files.createDirectories(absoluteDirectory);
+                setHiddenFromGameDir(absoluteDirectory, false, false);
             } catch (IOException e) {
                 pl.logE("Exception caught during directory creation: " + e);
             }
         } else {
-            pl.logI("Directory '" + GAME_DIR.relativize(dir) + "' already exists in game folder, skipping creation.");
+            pl.logI("Directory '" + GAME_DIR.relativize(absoluteDirectory) + "' already exists in game folder, skipping creation.");
         }
-        return dir;
+        if (hideContent != null) setHiddenFromGameDir(absoluteDirectory, true, hideContent);
     }
 
     /**
-     * Deletes a directory inside the game folder.
-     * @param directory The directory or path of directories you want to delete.
+     * Deletes a directory.
+     * @param directory The directory you want to delete.
      * @param deleteItself If the directory itself should be deleted.
      */
-    public void deleteDirectory(String directory, boolean deleteItself) {
-        Path dir = GAME_DIR.resolve(directory);
-        if (Files.exists(dir)) {
-            pl.logAdditionalI("Deleting directory '" + directory + "'", !deleteItself, " content");
-            try (Stream<Path> pathStream = Files.walk(dir)) {
+    public void deleteDirectory(Path directory, boolean deleteItself) {
+        Path absoluteDirectory = directory.isAbsolute() ? directory : GAME_DIR.resolve(directory);
+        if (Files.exists(absoluteDirectory)) {
+            pl.logAdditionalI("Deleting directory '" + absoluteDirectory + "'", !deleteItself, " content");
+            try (Stream<Path> pathStream = Files.walk(absoluteDirectory)) {
                 pathStream.sorted(Comparator.reverseOrder()).forEach(path -> {
                     try {
                         if (deleteItself) Files.deleteIfExists(path);
-                        else if (!path.equals(dir)) Files.deleteIfExists(path);
+                        else if (!path.equals(absoluteDirectory)) Files.deleteIfExists(path);
                     } catch (IOException e) {
-                        pl.logE("Exception caught during file/directory delete. Path: " + dir + " Exception: " + e);
+                        pl.logE("Exception caught during file/directory delete. Path: " + path + " Exception: " + e);
                     }
                 });
             } catch (IOException e) {
                 pl.logExceptionE("directory files walk", e);
             }
         } else {
-            pl.logI("Folder '" + directory + "' does not exist in game folder, nothing to delete.");
+            pl.logI("Folder '" + absoluteDirectory + "' does not exist in game folder, nothing to delete.");
         }
     }
 

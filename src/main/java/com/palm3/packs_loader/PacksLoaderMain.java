@@ -2,11 +2,14 @@ package com.palm3.packs_loader;
 
 import com.mojang.logging.LogUtils;
 import com.palm3.packs_loader.assets.*;
+import com.palm3.packs_loader.common.FilesCopier;
 import com.palm3.packs_loader.logging.PrettyLogging;
 import net.minecraft.network.chat.Component;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.event.IModBusEvent;
+import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.fml.loading.FMLPaths;
 import net.neoforged.neoforge.event.AddPackFindersEvent;
 import org.slf4j.Logger;
@@ -39,8 +42,15 @@ public class PacksLoaderMain {
         MAIN_PL.logLineI(false);
 
         // Do actual stuff
-        modEventBus.addListener(PacksLoaderMain::packFindersEvent);
-        modEventBus.addListener(IncompatibleModsRemover::loadCompleteEvent);
+        //modEventBus.addListener(IncompatibleModsRemover::loadCompleteEvent);
+        //modEventBus.addListener(PacksLoaderMain::packFindersEvent);
+        modEventBus.addListener(PacksLoaderMain::testCommonSetup);
+    }
+
+    @SubscribeEvent
+    public static void testCommonSetup(FMLCommonSetupEvent event) {
+        FilesCopier fc = new FilesCopier(MAIN_PL);
+        fc.createDirectory(Path.of("a", ".b"), null);
     }
 
 
@@ -56,11 +66,10 @@ public class PacksLoaderMain {
     //todo re-add patchers
 
 
-    public static final AssetsLoader ASSET_LOADER = new AssetsLoader(".temp_assets", true, MOD_ID + "_mod_id");
+    //public static final AssetsLoader ASSET_LOADER = new AssetsLoader(MOD_ID + "_mod_id", ".temp_assets");
 
     @SubscribeEvent
     public static void packFindersEvent(AddPackFindersEvent event) {
-        MAIN_PL.logI("SHIT_FIRED");
         //testing, praying it works, fingers crossed, even more than the ones i have by default
         // works, idk how i did it - 15:33
         // 19:38 - doesn't work anymore -> god, fu**, dammit (holy cit here)
@@ -86,9 +95,9 @@ public class PacksLoaderMain {
                 false
         );
 
-        ResourcePackLoadingContext context = new ResourcePackLoadingContext(ASSET_LOADER, jarLoadingInfos, packInfos);
+        //ResourcePackLoadingContext context = new ResourcePackLoadingContext(ASSET_LOADER, jarLoadingInfos, packInfos);
 
-        AssetsLoader.loadPack(event, context);
+        //AssetsLoader.loadPack(event, context);
 
 
         /*assetsLoader.single.loadAssetsCustomFolderName(

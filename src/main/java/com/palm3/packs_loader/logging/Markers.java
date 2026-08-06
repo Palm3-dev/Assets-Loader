@@ -9,7 +9,8 @@ public enum Markers {
     MOVE(create("MOVE")),
     LOAD(create("LOAD")),
     EXTRACT(create("EXTRACT")),
-    PATCH(create("PATCH"));
+    PATCH(create("PATCH")),
+    FOLDER_CREATION(create("FOLDER_CREATION"));
 
     public final Marker marker;
 
