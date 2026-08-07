@@ -1,7 +1,9 @@
-package com.palm3.packs_loader.assets;
+package com.palm3.packs_loader.temp;
 
 import com.mojang.logging.LogUtils;
 import com.palm3.packs_loader.PacksLoaderMain;
+import com.palm3.packs_loader.assets.NamespaceCouple;
+import com.palm3.packs_loader.common.FilesCopier;
 import com.palm3.packs_loader.logging.PrettyLogging;
 
 import java.util.*;
@@ -11,16 +13,16 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Provides all the information about the jar files, icon and namespaces needed to load a pack.
  */
 public record JarLoadingInfos(LinkedHashMap<String, List<NamespaceCouple>> namespaceCouplesByJarFile, JarLoadingInfos.JarIconFile jarIconFile,
-                              boolean forceCopyAssets, AssetsLoader.LogCopyOption logCopyOption) {
+                              boolean forceCopyAssets, FilesCopier.LogCopyOption logCopyOption) {
 
     private static final PrettyLogging PL = new PrettyLogging(LogUtils.getLogger(), PacksLoaderMain.DEF_PL_PARAMS);
 
     /**
      * Defines the jar icon file for a resourcepack.
-     * @param iconJarFile  The name of the jar file where the icon is located.
+     * @param jarFile  The name of the jar file where the icon is located.
      * @param iconFileName The name of the icon file inside the jar.
      */
-    public record JarIconFile(String iconJarFile, String iconFileName) {}
+    public record JarIconFile(String jarFile, String iconFileName) {}
 
     /**
      * Creates an instance of this record.

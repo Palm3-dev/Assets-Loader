@@ -1,4 +1,4 @@
-package com.palm3.packs_loader.assets;
+package com.palm3.packs_loader.temp;
 
 import net.minecraft.network.chat.Component;
 
