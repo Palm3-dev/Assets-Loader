@@ -30,6 +30,7 @@ public enum PackType {
 
     /**
      * Converts this pack type to the minecraft one {@link net.minecraft.server.packs.PackType}.
+     * @return The minecraft pack type. {@code null} if the enum value is {@link PackType#BOTH}.
      */
     public net.minecraft.server.packs.PackType toMcPackType() {
         switch (this) {
@@ -41,7 +42,7 @@ public enum PackType {
                 return net.minecraft.server.packs.PackType.SERVER_DATA;
             }
 
-            case BOTH -> {
+            default -> {
                 return null;
             }
         }
