@@ -2,7 +2,13 @@ package com.palm3.packs_loader.common;
 
 import com.palm3.packs_loader.logging.PrettyLogging;
 import net.minecraft.Util;
-import org.lwjgl.system.Platform;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.packs.PackLocationInfo;
+import net.minecraft.server.packs.PackResources;
+import net.minecraft.server.packs.PackSelectionConfig;
+import net.minecraft.server.packs.PathPackResources;
+import net.minecraft.server.packs.repository.*;
+import net.minecraft.world.flag.FeatureFlagSet;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -12,6 +18,8 @@ import java.io.InputStream;
 import java.nio.file.*;
 import java.nio.file.attribute.DosFileAttributeView;
 import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
@@ -303,5 +311,29 @@ public class FilesCopier {
         } else {
             pl.logW("No PNG icon file found (or error happened, use copy debug for more infos). Searched path: " + iconPath);
         }
+    }
+
+
+    //shall work, i guess?
+    public static RepositorySource createPackRepositorySource(String internalPackId, Component packTitle, Component packDescription, Path packPath, boolean required, boolean hidden) throws RuntimeException {
+        PackLocationInfo packLocationInfo = new PackLocationInfo(
+                internalPackId,
+                packTitle,
+                PackSource.DEFAULT,
+                Optional.empty()
+        );
+
+        PackSelectionConfig selectionConfig = new PackSelectionConfig(required, Pack.Position.BOTTOM, false);
+        Pack.Metadata metadata = new Pack.Metadata(packDescription, PackCompatibility.COMPATIBLE, FeatureFlagSet.of(), List.of(), hidden);
+        Pack.ResourcesSupplier resourcesSupplier = new PathPackResources.PathResourcesSupplier(packPath);
+
+        Pack pack = new Pack(
+                packLocationInfo,
+                resourcesSupplier,
+                metadata,
+                selectionConfig
+        );
+
+        return packConsumer -> packConsumer.accept(pack);
     }
 }
