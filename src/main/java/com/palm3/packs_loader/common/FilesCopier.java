@@ -4,8 +4,8 @@ import com.palm3.packs_loader.logging.PrettyLogging;
 import net.minecraft.Util;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.packs.PackLocationInfo;
-import net.minecraft.server.packs.PackResources;
 import net.minecraft.server.packs.PackSelectionConfig;
+import net.minecraft.server.packs.PackType;
 import net.minecraft.server.packs.PathPackResources;
 import net.minecraft.server.packs.repository.*;
 import net.minecraft.world.flag.FeatureFlagSet;
@@ -32,6 +32,14 @@ public class FilesCopier {
 
     public FilesCopier(PrettyLogging prettyLogging) {
         pl = prettyLogging;
+    }
+
+    @ParametersAreNonnullByDefault
+    public static record JarFilesCopyContext(Path jarFilePath, Path filesDestinationPath, String namespaceToCopy, PackType packType, boolean forceCopy, LogCopyOption logCopyOption) {
+    }
+
+    @ParametersAreNonnullByDefault
+    public static record JarIconCopyContext(Path jarFilePath, String iconFileName, Path iconDestinationPath, @Nullable String newIconFileName) {
     }
 
     /**
