@@ -91,7 +91,7 @@ public class IncompatibleModsRemover {
      * <br><b>Specifically:</b> searches in the main mod directory the jar file and returns the path if exists. If it's not there (could be an incompatible file that has been moved)
      * it searches in the incompatible jars directory {@link IncompatibleModsRemover#INCOMPATIBLE_JARS_DIR}. If it's not found here, the mothed throws an {@link IOException}.
      * @param modJarFile The name of the mod jar file.
-     * @return The {@link Path} of the jar file.
+     * @return The <b>absolute</b> {@link Path} of the jar file.
      * @throws FileNotFoundException If the jar file isn't found neither in the regular mod directory nor in the incompatible mods directory.
      */
     public static Path getModJarPath(String modJarFile) throws FileNotFoundException {
