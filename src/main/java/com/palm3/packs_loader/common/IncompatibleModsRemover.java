@@ -102,7 +102,7 @@ public class IncompatibleModsRemover {
                 return path;
 
             PL.conditionalI(path.equals(paths.getFirst()) && !Files.exists(path) , "Jar file '" + modJarFile + "' hasn't been found in regular mods directory, searching in incompatible dir.");
-            PrettyLogging.conditionalThrow(!Files.isRegularFile(path), new IllegalArgumentException("The given file path is not a file!"));
+            PrettyLogging.conditionalThrow(Files.exists(path) && !Files.isRegularFile(path), new IllegalArgumentException("The file path '" + path + "' is not a file!"));
         }
 
         throw new FileNotFoundException(
