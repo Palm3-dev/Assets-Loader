@@ -304,7 +304,7 @@ public class FilesCopier {
         }
 
         try (FileSystem jarFileSystem = FileSystems.newFileSystem(modJarFilePath)) {
-            Path jarFilesPath = jarFileSystem.getPath(context.packType().safeFolderName());  // Assets or data
+            Path jarFilesPath = jarFileSystem.getPath(context.packType().absoluteFolderName());  // Assets or data
 
             pl.logI("Walking jar files and coping...");
             pl.logI("| --> Coping files from directory: '" + jarFilesPath + "'. Jar file system root: '" + modJarFilePath + File.separator + "'");
@@ -480,7 +480,7 @@ public class FilesCopier {
 
         List<String> namespaces = new ArrayList<>();
         try (FileSystem jarFileSystem = FileSystems.newFileSystem(modJarFilePath)) {
-            Path targetNamespacesPath = jarFileSystem.getPath(packType.safeFolderName());
+            Path targetNamespacesPath = jarFileSystem.getPath(packType.absoluteFolderName());
             PL.logI("Searching jar namespaces in: " + targetNamespacesPath + ", jar file: " + modJarFilePath.getFileName());
             try (Stream<Path> pathStream = Files.walk(targetNamespacesPath)) {
                 pathStream

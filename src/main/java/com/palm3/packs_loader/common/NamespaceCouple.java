@@ -1,4 +1,4 @@
-package com.palm3.packs_loader.assets;
+package com.palm3.packs_loader.common;
 
 import com.mojang.logging.LogUtils;
 import com.palm3.packs_loader.PacksLoaderMain;

@@ -29,7 +29,7 @@ public class IncompatibleModsRemover {
             PL.logI("Creating directory for incompatible jars in main mods folder.", Markers.INIT.marker);
             Files.createDirectories(INCOMPATIBLE_JARS_DIR);
         } catch (IOException e) {
-            throw new RuntimeException("IOException caught during 'incompatible_loader_jars' directory creation: " + e);
+            throw new RuntimeException("IOException caught during '" + INCOMPATIBLE_JARS_DIR.getFileName() + "' directory creation: " + e);
         }
     }
 
@@ -109,6 +109,18 @@ public class IncompatibleModsRemover {
                 "The given jar file with name '" + modJarFile + "' hasn't been found neither in the mod main directory 'mods' nor in the incompatible mods dir '"
                         + GAME_DIR.relativize(INCOMPATIBLE_JARS_DIR) + "'!"
         );
+    }
+
+    /**
+     * Gets a mod jar file path from the jar name.
+     * <br><b>Specifically:</b> searches in the main mod directory the jar file and returns the path if exists. If it's not there (could be an incompatible file that has been moved)
+     * it searches in the incompatible jars directory {@link IncompatibleModsRemover#INCOMPATIBLE_JARS_DIR}. If it's not found here, the mothed throws an {@link IOException}.
+     * @param modJarFilePath The current path of the mod jar file, will take the name with {@link Path#getFileName()}.
+     * @return The <b>absolute</b> {@link Path} of the jar file.
+     * @throws FileNotFoundException If the jar file isn't found neither in the regular mod directory nor in the incompatible mods directory.
+     */
+    public static Path getModJarPath(Path modJarFilePath) throws FileNotFoundException {
+        return getModJarPath(modJarFilePath.getFileName().toString());
     }
 
     @SubscribeEvent

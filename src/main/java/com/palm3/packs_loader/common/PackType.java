@@ -22,17 +22,10 @@ public enum PackType {
     }
 
     /**
-     * @return the folder name of the corresponding pack type. {@code "both"} if the enum value is {@link PackType#BOTH}.
-     */
-    public String folderName() {
-        return folderName;
-    }
-
-    /**
      * Converts this pack type to the minecraft one {@link net.minecraft.server.packs.PackType}.
      * @return The minecraft pack type. {@code null} if the enum value is {@link PackType#BOTH}.
      */
-    public net.minecraft.server.packs.PackType toMcPackType() {
+    public @Nullable net.minecraft.server.packs.PackType toMcPackType() {
         switch (this) {
             case ASSETS -> {
                 return net.minecraft.server.packs.PackType.CLIENT_RESOURCES;
