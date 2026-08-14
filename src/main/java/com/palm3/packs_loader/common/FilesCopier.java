@@ -265,12 +265,6 @@ public class FilesCopier {
                 new IllegalArgumentException("Method FilesCopier.copyFilesFromJar(JarFilesCopyContext context) loads one pack type at the time, given PackType value (from context) is PackType.BOTH!")
         );
 
-        // Jar file path exists?
-        PrettyLogging.conditionalThrow(
-                !Files.exists(context.jarFilePath()),
-                new IllegalArgumentException("Unable to copy jar files, jar file of path '" + context.jarFilePath() + "' doesn't exist!")
-        );
-
         // Jar path is absolute?
         Path modJarFilePath;
         boolean isAbsolutePath = context.jarFilePath().isAbsolute();
@@ -480,7 +474,7 @@ public class FilesCopier {
             try (Stream<Path> pathStream = Files.walk(targetNamespacesPath)) {
                 pathStream
                         .filter(path -> {
-                            if (path.toAbsolutePath().getParent().equals(targetNamespacesPath)) {
+                            if (path.getParent() != null && path.getParent().equals(targetNamespacesPath)) {
                                 PL.logI("Found namespace " + path);
                                 return true;
                             }
