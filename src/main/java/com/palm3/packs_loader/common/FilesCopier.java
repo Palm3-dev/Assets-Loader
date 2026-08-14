@@ -170,25 +170,20 @@ public class FilesCopier {
      * @param directory The directory path inside the game folder. You should pass a non-absolute {@link Path}, so that it
      *                  gets resolved against the game dir {@link net.neoforged.fml.loading.FMLPaths#GAMEDIR}.
      *                  <b>If you pass an absolute path,</b> it should already be a path that ends inside the game dir.
+     *                  <br><b>IMPORTANT:</b> all the given path will be treated as a directory, even if you give {@code my/path/file.txt} a directory
+     *                  {@code file.txt} will be created!
      * @param hideContent If {@code null} the given directory will be set hidden only if it doesn't already exist
      *                    (so usually only the first time the method gets called unless the directory gets deleted or others).
      *                    On the other hand, if it's not {@code null}, the directory will be set hidden every time the method gets called.
      *                    When not null, the value of this {@link Boolean} is used to determine if the content of the given directory
      *                    should be also set hidden; this every time the method gets called, remember.
      * @return The absolute path inside the game dir of the created directory.
-     * @throws IllegalArgumentException In the following cases:
-     * <ul>
-     *     <li>If the given directory <b>is an absolute path</b> and doesn't end somewhere inside the game dir.</li>
-     *     <li>If the given directory path doesn't point to a directory</li>
-     * </ul>
+     * @throws IllegalArgumentException If the given directory <b>is an absolute path</b> and doesn't end somewhere inside the game dir.
      * @throws RuntimeException If an {@link IOException} occurs during the directory creation.
      */
     public Path createDirectory(Path directory, @Nullable Boolean hideContent) {
         Path absoluteDirectory = directory.isAbsolute() ? directory : GAME_DIR.resolve(directory);
         absoluteEndsInGameDirOrThrow(absoluteDirectory);
-
-        if (!Files.isDirectory(absoluteDirectory))
-            throw new IllegalArgumentException("Given directory path '" + absoluteDirectory + "' is not a directory!");
 
         if (!Files.exists(absoluteDirectory)) {
             pl.logI("Creating directory '" + GAME_DIR.relativize(absoluteDirectory) + "' inside game folder.");
@@ -427,7 +422,7 @@ public class FilesCopier {
                 try (InputStream is = Files.newInputStream(jarIconPath)) {
                     pl.logI("Coping icon file '" + jarIconPath + "' from jar file");
                     String newIconFileName = context.newIconFileName() == null ? fullIconFileName : context.newIconFileName();
-                    Files.copy(is, absoluteIconDestinationPath.resolve(newIconFileName.endsWith(".png") ? newIconFileName : newIconFileName + ".png"));
+                    Files.copy(is, absoluteIconDestinationPath.resolve(newIconFileName.endsWith(".png") ? newIconFileName : newIconFileName + ".png"), StandardCopyOption.REPLACE_EXISTING);
                 } catch (IOException e) {
                     pl.logExceptionE("copy of jar icon '" + jarIconPath + "'", e);
                 }
