@@ -9,6 +9,7 @@ import net.minecraft.server.packs.PackSelectionConfig;
 import net.minecraft.server.packs.PathPackResources;
 import net.minecraft.server.packs.repository.*;
 import net.minecraft.world.flag.FeatureFlagSet;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -500,11 +501,12 @@ public class FilesCopier {
         pl.logCenteredI("Coping full jar file pack for jar: " + context.modJarFile.getFileName().toString(), PrettyLogging.DEF_LINE);
 
         for (PackType packType : PackType.PACK_TYPES) {
+            assert packType.absoluteFolderName() != null;
             for (String namespace : discoverJarNamespaces(context.modJarFile, packType)) {
                 copyFilesFromJar(new JarFilesCopyContext(
                         packType,
                         context.modJarFile,
-                        context.destinationPackRoot,
+                        context.destinationPackRoot.resolve(packType.absoluteFolderName()),
                         namespace,
                         context.forceCopy,
                         context.logCopyOption
