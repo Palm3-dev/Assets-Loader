@@ -1,11 +1,14 @@
 package com.palm3.packs_loader.common;
 
 import javax.annotation.Nullable;
+import java.util.List;
 
 public enum PackType {
     ASSETS("assets"),
     DATAPACK("data"),
     BOTH("both");
+
+    public static final List<PackType> PACK_TYPES = List.of(ASSETS, DATAPACK);
 
     private final String folderName;
 

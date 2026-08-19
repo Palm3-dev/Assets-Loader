@@ -278,19 +278,19 @@ public class FilesCopier {
         }
 
         // Destination is absolute?
-        Path absoluteFilesDestinationPath = context.filesDestinationPath().isAbsolute() ? context.filesDestinationPath() : context.filesDestinationPath().toAbsolutePath();
-
-        // Path is dir? --> throw
-        PrettyLogging.conditionalThrow(
-                !Files.isDirectory(absoluteFilesDestinationPath),
-                new IllegalArgumentException("The given destination path '" + absoluteFilesDestinationPath + "' for files copy is not a directory!")
-        );
+        Path absoluteFilesDestinationPath = context.filesDestinationPath().isAbsolute() ? context.filesDestinationPath() : GAME_DIR.resolve(context.filesDestinationPath().toString());
 
         // Destination path exists? --> create
         if (!Files.exists(absoluteFilesDestinationPath)) {
             pl.logW("Destination directory '" + absoluteFilesDestinationPath + "' for jar files copy doesn't already exist, creating now.");
             createDirectory(absoluteFilesDestinationPath, null);  // Possible RuntimeException throw just to remind
         }
+
+        // Path is dir? --> throw
+        PrettyLogging.conditionalThrow(
+                !Files.isDirectory(absoluteFilesDestinationPath),
+                new IllegalArgumentException("The given destination path '" + absoluteFilesDestinationPath + "' for files copy is not a directory!")
+        );
 
         try (FileSystem jarFileSystem = FileSystems.newFileSystem(modJarFilePath)) {
             Path jarFilesPath = jarFileSystem.getPath(context.packType().absoluteFolderName());  // Assets or data
@@ -402,7 +402,7 @@ public class FilesCopier {
             return;
         }
 
-        Path absoluteIconDestinationPath = context.iconDestinationPath().isAbsolute() ? context.iconDestinationPath() : context.iconDestinationPath().toAbsolutePath();
+        Path absoluteIconDestinationPath = context.iconDestinationPath().isAbsolute() ? context.iconDestinationPath() : GAME_DIR.resolve(context.iconDestinationPath().toString());
 
         if (!Files.exists(absoluteIconDestinationPath)) {
             pl.logW("Destination directory '" + absoluteIconDestinationPath + "' for jar files copy doesn't already exist, creating now.");
@@ -499,11 +499,8 @@ public class FilesCopier {
     public void literalJarCopy(LiteralJarCopyContext context) {
         pl.logCenteredI("Coping full jar file pack for jar: " + context.modJarFile.getFileName().toString(), PrettyLogging.DEF_LINE);
 
-        List<PackType> packTypes = List.of(PackType.ASSETS, PackType.DATAPACK);
-        for (PackType packType : packTypes) {
-            pl.logI("first for");
+        for (PackType packType : PackType.PACK_TYPES) {
             for (String namespace : discoverJarNamespaces(context.modJarFile, packType)) {
-                pl.logI("2 for");
                 copyFilesFromJar(new JarFilesCopyContext(
                         packType,
                         context.modJarFile,
