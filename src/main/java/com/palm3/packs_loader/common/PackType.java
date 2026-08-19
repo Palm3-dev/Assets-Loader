@@ -1,5 +1,7 @@
 package com.palm3.packs_loader.common;
 
+import com.google.common.collect.ImmutableList;
+
 import javax.annotation.Nullable;
 import java.util.List;
 
@@ -8,7 +10,7 @@ public enum PackType {
     DATAPACK("data"),
     BOTH("both");
 
-    public static final List<PackType> PACK_TYPES = List.of(ASSETS, DATAPACK);
+    public static final ImmutableList<PackType> PACK_TYPES = ImmutableList.of(ASSETS, DATAPACK);
 
     private final String folderName;
 
