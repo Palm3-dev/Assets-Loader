@@ -113,9 +113,15 @@ public class FilesCopier {
 
     // IllegalArgument if path doesn't end in game dir or not absolute.
     /**
-     * IllegalArgumentException msg: "The given path (absolute) '-path-' is not in the game directory!"
+     * Checks if the given absolute path ends in the game dir, if not throws {@link IllegalArgumentException}.
+     * @param absolutePath The absolute path you want to see if points to a file/folder in the game directory.
+     * @throws IllegalArgumentException In the following cases:
+     * <ul>
+     *     <li>The given path <b>is not</b> absolute.</li>
+     *     <li>The given path doesn't point inside the game directory.</li>
+     * </ul>
      */
-    private static void absoluteEndsInGameDirOrThrow(Path absolutePath) {
+    public static void absoluteEndsInGameDirOrThrow(Path absolutePath) {
         if (!absoluteEndsInGameDir(absolutePath))
             throw new IllegalArgumentException("The given path (absolute) '" + absolutePath + "' is not in the game directory!");
     }
