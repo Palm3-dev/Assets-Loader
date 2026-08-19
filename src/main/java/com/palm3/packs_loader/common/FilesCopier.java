@@ -445,7 +445,7 @@ public class FilesCopier {
      *     </li>
      * </ul>
      */
-    protected static List<String> discoverJarNamespaces(Path jarFilePath, PackType packType) {
+    public static List<String> discoverJarNamespaces(Path jarFilePath, PackType packType) {
         PrettyLogging.conditionalThrow(
                 packType.absoluteFolderName() == null,
                 new IllegalArgumentException("Method FilesCopier.discoverNamespaces(Path, PackType) only accepts one pack type at the time, given PackType value is PackType.BOTH!")
