@@ -294,7 +294,10 @@ public class FilesCopier {
         );
 
         try (FileSystem jarFileSystem = FileSystems.newFileSystem(modJarFilePath)) {
-            Path jarFilesPath = jarFileSystem.getPath(context.packType().absoluteFolderName());  // Assets or data
+            Path jarFilesPath = jarFileSystem.getPath(context.packType().absoluteFolderName()).resolve(context.namespaceToCopy());
+            if ((Files.exists(jarFilesPath) && Files.isDirectory(jarFilesPath)) || !Files.exists(jarFilesPath)) {
+                throw new IllegalArgumentException("Path '" + jarFilesPath + "' inside jar file doesn't exist or isn't a directory! Have you set the right namespace folder to copy?");
+            }
 
             pl.logI("Walking jar files and coping...");
             pl.logI("| --> Coping files from directory: '" + jarFilesPath + "'. Jar file system root: '" + modJarFilePath + File.separator + "'");
@@ -506,7 +509,7 @@ public class FilesCopier {
                 copyFilesFromJar(new JarFilesCopyContext(
                         packType,
                         context.modJarFile,
-                        context.destinationPackRoot.resolve(packType.absoluteFolderName()),
+                        context.destinationPackRoot.resolve(packType.absoluteFolderName()).resolve(namespace),
                         namespace,
                         context.forceCopy,
                         context.logCopyOption
