@@ -23,6 +23,7 @@ public class IncompatibleModsRemover {
     public static final Path INCOMPATIBLE_JARS_DIR = MOD_DIR.resolve("incompatible_loader_jars");
     public static final List<String> UNSUPPORTED_JARS = new ArrayList<>();
     private static boolean eventAlreadyFired = false;
+    public static int newIncompatibleJars = 0;
 
     static {
         try {
@@ -58,6 +59,7 @@ public class IncompatibleModsRemover {
                         if (isInvalidNeo(loadingIssue.translationKey())) {
                             PL.logI("Found incompatible mod jar file (FABRIC/FORGE): " + issuedFileString, Markers.SEARCH.marker);
                             UNSUPPORTED_JARS.add(issuedFileString);
+                            newIncompatibleJars++;
                         }
                     }
                     case FABRIC -> {

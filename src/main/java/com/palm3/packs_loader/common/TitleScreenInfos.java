@@ -14,7 +14,7 @@ public class TitleScreenInfos {
 
     @SubscribeEvent
     public static void screenInit(ScreenEvent.Init.Post event) {
-        if (event.getScreen() instanceof TitleScreen && !toastShown) {
+        if (event.getScreen() instanceof TitleScreen && !toastShown && IncompatibleModsRemover.newIncompatibleJars > 0) {
             SystemToast.add(
                     Minecraft.getInstance().getToasts(),
                     SystemToast.SystemToastId.PERIODIC_NOTIFICATION,
