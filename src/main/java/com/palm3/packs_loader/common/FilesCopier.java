@@ -301,7 +301,7 @@ public class FilesCopier {
 
         try (FileSystem jarFileSystem = FileSystems.newFileSystem(modJarFilePath)) {
             Path jarFilesPath = jarFileSystem.getPath(context.packType().absoluteFolderName()).resolve(context.namespaceToCopy());
-            if ((Files.exists(jarFilesPath) && Files.isDirectory(jarFilesPath)) || !Files.exists(jarFilesPath)) {
+            if ((Files.exists(jarFilesPath) && !Files.isDirectory(jarFilesPath)) || !Files.exists(jarFilesPath)) {
                 throw new IllegalArgumentException("Path '" + jarFilesPath + "' inside jar file doesn't exist or isn't a directory! Have you set the right namespace folder to copy?");
             }
 
@@ -534,7 +534,7 @@ public class FilesCopier {
     }
 
     //shall work, i guess?
-    public static RepositorySource createPackRepositorySource(String internalPackId, Component packTitle, Component packDescription, Path packPath, boolean required, boolean hidden) throws RuntimeException {
+    public static RepositorySource createPackRepositorySource(String internalPackId, Component packTitle, Component packDescription, Path packRootPath, boolean required, boolean hidden) throws RuntimeException {
         PackLocationInfo packLocationInfo = new PackLocationInfo(
                 internalPackId,
                 packTitle,
@@ -544,7 +544,7 @@ public class FilesCopier {
 
         PackSelectionConfig selectionConfig = new PackSelectionConfig(required, Pack.Position.BOTTOM, false);
         Pack.Metadata metadata = new Pack.Metadata(packDescription, PackCompatibility.COMPATIBLE, FeatureFlagSet.of(), List.of(), hidden);
-        Pack.ResourcesSupplier resourcesSupplier = new PathPackResources.PathResourcesSupplier(packPath);
+        Pack.ResourcesSupplier resourcesSupplier = new PathPackResources.PathResourcesSupplier(packRootPath);
 
         Pack pack = new Pack(
                 packLocationInfo,
