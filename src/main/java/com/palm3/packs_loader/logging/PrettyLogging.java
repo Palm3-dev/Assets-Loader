@@ -14,8 +14,8 @@ public class PrettyLogging {
 
     public final Logger LOGGER;
 
-    public static final String DEF_LINE = "===================================================================================";  // 83 chars
-    public static final String DEF_EMPTY_LINE = "                                                                                   ";  // 83 chars
+    public static final String DEF_LINE = "====================================================================================";  // 84 chars
+    public static final String DEF_EMPTY_LINE = "                                                                                    ";  // 84 chars
 
     public final String line1;
     public final String line2;
@@ -117,13 +117,13 @@ public class PrettyLogging {
     }
 
     /**
-     * Logs an exception message as error.
+     * Logs an exception message as error. The message structure is this: {@code Exception caught during <triedAction>: <exception>}.
      * @param triedAction The string that should go after 'Exception caught during'.
-     * @param exception The appended exception.
+     * @param exception The happened exception.
      * @param marker Optional marker.
      */
     public void logExceptionE(String triedAction, Exception exception, Marker... marker) {
-        LOGGER.error(getMarker(marker), "Exception caught during {}:{}", triedAction, exception);
+        LOGGER.error(getMarker(marker), "Exception caught during {}: {}", triedAction, exception);
     }
 
     /**
@@ -177,22 +177,28 @@ public class PrettyLogging {
      * Return the {@code string} centered relative to the given {@code relativeTo} value.
      * @param string The string to center.
      * @param relativeTo The string to center the given string to.
-     * @param keepSameLength If the length of the string should remain the same as the relative.
      * @param applySpaces If spaces should be applied before and after the string once centered with the relative.
+     * @param shortOutIfLonger If the result centered string is longer than the given {@code relativeTo} string,
+     *                         defines if the result string should be trimmed starting from the sides, deleting chars from alternating sides.
+     * @param sidesString When the given string length exceeds the {@code relativeTo} length: if nothing is given, the given string will simply be returned;
+     *                    if a string or more is given, the first string of the vararg will be applied to the start and to the end of the given {@code string},
+     *                    with spaces in between.
      * @return The centered {@link String} relative to the given one.
      */
-    public static String centerString(String string, String relativeTo, boolean keepSameLength, boolean applySpaces) {
+    public static String centerString(String string, String relativeTo, boolean applySpaces, boolean shortOutIfLonger, String... sidesString) {
         int relativeToLength = relativeTo.length();
-        int msgLength = string.length();
+        int stringLength = string.length();
 
-        String beforeMsg = relativeTo.substring(0, relativeToLength / 2);
-        String afterMsg = relativeTo.substring(relativeToLength / 2);
+        String sidesString_ = Arrays.stream(sidesString).toList().isEmpty() ? null : Arrays.stream(sidesString).toList().getFirst();
 
-        if (keepSameLength) {
-            int additionalSpace = applySpaces ? 1 : 0;
-            beforeMsg = beforeMsg.substring(msgLength / 2 + additionalSpace);
-            afterMsg = afterMsg.substring(msgLength / 2 + additionalSpace);
+        if ((applySpaces && stringLength >= relativeToLength + 2) || (!applySpaces && stringLength >= relativeToLength)) {
+            if (sidesString_ != null)
+                return sidesString_ + " " + string + " " + sidesString_;
+            return string;
         }
+
+        String beforeMsg = applySpaces ? relativeTo.substring(0, (relativeToLength / 2) - 1) : relativeTo.substring(0, relativeToLength / 2);
+        String afterMsg = applySpaces ? relativeTo.substring((relativeToLength / 2) + 1) : relativeTo.substring(relativeToLength / 2);
 
         String centeredMsg = "";
         StringBuilder builder = new StringBuilder(centeredMsg);
@@ -203,16 +209,14 @@ public class PrettyLogging {
         if (applySpaces) builder.append(" ");
         builder.append(afterMsg);
 
+        // Short out if can do and longer
         int currentMsgLength = builder.toString().length();
-
-        if (currentMsgLength > relativeToLength && keepSameLength) {
-            boolean first = true;
-            for (int i = 0; i < currentMsgLength - relativeToLength; i++) {
-                if (first) builder.delete(0, 1);
-                else builder.delete(currentMsgLength, currentMsgLength + 1);
-                currentMsgLength = builder.toString().length();
-                first = !first;
-            }
+        boolean isStart = true;
+        while (currentMsgLength > relativeToLength && shortOutIfLonger) {
+            if (isStart) builder.deleteCharAt(0);
+            else builder.deleteCharAt(currentMsgLength - 1);
+            currentMsgLength = builder.toString().length();
+            isStart = !isStart;
         }
 
         return builder.toString();
@@ -220,18 +224,28 @@ public class PrettyLogging {
 
     /**
      * Logs the given message centered relative to the given string.
+     * <ul>
+     *     <li>It applies spaces before and after the message.</li>
+     *     <li>If the resulting centered message is longer than the {@code relativeTo} string, the message will be shorted out to the relative string length.</li>
+     *     <li>If the message length is more or equal to the given {@code relativeTo} string,
+     *         the given {@code sidesString} will be applied before and after the message (with spaces), then the resulting message is logged.
+ *         </li>
+     * </ul>
      * @param msg The message to center.
      * @param relativeTo The message to center the given string to.
-     * @param keepSameLength If the length of the message should remain the same as the relative.
-     * @param applySpaces If spaces should be applied before and after your message once centered with the relative.
      * @param marker Optional marker.
      */
-    public void logCenteredI(String msg, String relativeTo, boolean keepSameLength, boolean applySpaces, Marker... marker) {
-        LOGGER.info(getMarker(marker), centerString(msg, relativeTo, keepSameLength, applySpaces));
+    public void logCenteredI(String msg, String relativeTo, String sidesString, Marker... marker) {
+        LOGGER.info(getMarker(marker), centerString(msg, relativeTo, true, true, sidesString));
     }
 
     /**
      * Logs the given message centered relative to the given string.
+     * <ul>
+     *     <li>It applies spaces before and after the message.</li>
+     *     <li>If the resulting centered message is longer than the {@code relativeTo} string, the message will be shorted out to the relative string length.</li>
+     *     <li>If the message length is more or equal to the given {@code relativeTo} string, only the message string will be logged.</li>
+     * </ul>
      * @param msg The message to center.
      * @param relativeTo The message to center the given string to.
      * @param marker Optional marker.
@@ -241,19 +255,39 @@ public class PrettyLogging {
     }
 
     /**
-     * Logs infos if the condition is true.
+     * Logs info message if the condition is true.
      * @param condition The condition expression, logs if true.
      * @param msg The message of the log.
      * @param marker Optional marker.
      */
     public void conditionalI(boolean condition, String msg, Marker... marker) {
-        if (condition) LOGGER.info(getMarker(marker), msg);
+        if (condition) logI(msg, getMarker(marker));
     }
 
     /**
-     * Logs additional conditional infos. No spaces are added.
+     * Logs warn message if the condition is true.
+     * @param condition The condition expression, logs if true.
+     * @param msg The message of the log.
+     * @param marker Optional marker.
+     */
+    public void conditionalW(boolean condition, String msg, Marker... marker) {
+        if (condition) logW(msg, getMarker(marker));
+    }
+
+    /**
+     * Logs error message if the condition is true.
+     * @param condition The condition expression, logs if true.
+     * @param msg The message of the log.
+     * @param marker Optional marker.
+     */
+    public void conditionalE(boolean condition, String msg, Marker... marker) {
+        if (condition) logE(msg, getMarker(marker));
+    }
+
+    /**
+     * Logs a base message and additional conditional infos. No spaces between messages are added.
+     * @param baseMsg Base info, always logged.
      * @param condition The condition to log the additional info.
-     * @param msg Base info, always logged.
      * @param additionalMsg The additional info.
      * @param marker Optional marker.
      */
@@ -277,6 +311,7 @@ public class PrettyLogging {
          * Creates an instance of the class. The internal counter <b>starts from zero.</b>
          * @param msg The message that will be logged before every step status (e.g. before 1/2).
          * @param totalSteps The total steps of the process.
+         * @param marker Optional marker.
          */
         public StepProcessLogger(String msg, int totalSteps, Marker... marker) {
             this.msg = msg;
@@ -315,7 +350,7 @@ public class PrettyLogging {
         }
 
         /**
-         * First increments the step value, and then logs the incremented step. Additional step infos can be added.
+         * First logs the value, and then increments the step. Additional step infos can be added.
          * @param stepInfo Additional info after the step number.
          * <p>
          *                   <pre>
@@ -393,6 +428,16 @@ public class PrettyLogging {
         public void logAndIncrement() {
             LOGGER.info(marker, "{} {}/{}", msg, currentStep.getAndIncrement(), totalSteps);
         }
+    }
+
+    /**
+     * Throws a {@link RuntimeException} if the condition is true.
+     * @param condition The condition.
+     * @param runtimeException The exception to throw.
+     */
+    public static void conditionalThrow(boolean condition, RuntimeException runtimeException) {
+        if(condition)
+            throw runtimeException;
     }
 
     // Gets first marker of varargs or null marker.
